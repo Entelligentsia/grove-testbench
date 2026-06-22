@@ -1,0 +1,1 @@
+Where is the `Compiler` class defined, and list every place a `new Compiler(...)` is instantiated, with file and line.

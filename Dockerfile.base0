@@ -1,0 +1,50 @@
+# grove-testbench :: base0
+# ---------------------------------------------------------------------------
+# The publishable, secret-free base image. Contains everything needed to run
+# the race EXCEPT credentials and grove itself:
+#   - node + Claude Code CLI + pi CLI
+#   - asciinema + git + jq + ripgrep
+#   - the 10 codebases cloned at pinned SHAs (see repos.manifest)
+#   - the host-side harness scripts (also handy inside the container)
+#
+# Intentionally NOT here (you add these manually, then commit local images):
+#   - auth / API keys           -> produces `db`  (grove OFF, authed)
+#   - grove binary + wiring     -> produces `dg`  (grove ON)
+# Never publish `db` / `dg`: they carry credentials.
+#
+# Build (from repo root):  scripts/build-base0.sh
+# ---------------------------------------------------------------------------
+FROM node:22-bookworm
+
+# --- system deps -----------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        curl \
+        ca-certificates \
+        jq \
+        ripgrep \
+        asciinema \
+        less \
+        bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- agent CLIs (global, via npm — no TTY needed) --------------------------
+# pi requires Node >=22.19 and its shell installer needs a terminal; installing
+# the npm package directly avoids both. Package names are stable upstream.
+RUN npm install -g @anthropic-ai/claude-code @earendil-works/pi-coding-agent
+
+# --- non-root user (agents refuse / warn when run as root) -----------------
+ARG USER=bench
+RUN useradd -m -s /bin/bash "$USER"
+USER ${USER}
+WORKDIR /home/${USER}
+
+# --- clone the 10 codebases at pinned SHAs ---------------------------------
+COPY --chown=bench:bench repos.manifest ./repos.manifest
+COPY --chown=bench:bench scripts ./harness/scripts
+RUN bash ./harness/scripts/clone-repos.sh ./repos.manifest ./repos
+
+# Repos live at /home/bench/repos/<name>; harness at /home/bench/harness.
+ENV GROVE_TESTBENCH_REPOS=/home/bench/repos
+
+CMD ["bash"]

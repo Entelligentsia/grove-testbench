@@ -1,0 +1,79 @@
+# grove-testbench scene manifest
+# Drives the per-repo video cards (intro + prompt + results). The exact prompt
+# each agent runs lives in scenes/<id>.prompt.txt (single source of truth for
+# run-race.sh). `target` and `expected_shape` are for YOUR off-screen sanity
+# check before publishing — correctness is NOT scored on screen.
+#
+# Task family: comprehension / navigation (find a definition + its call
+# sites / methods). Grove's home turf.
+
+scenes:
+  - id: tokio
+    language: Rust
+    repo: tokio-rs/tokio
+    intro: "Tokio — the async runtime that half of Rust's networking stack is built on."
+    target: "tokio::spawn"
+    expected_shape: "Defined in tokio/src/task/spawn.rs; delegates to runtime spawn; several internal call sites."
+
+  - id: hugo
+    language: Go
+    repo: gohugoio/hugo
+    intro: "Hugo — the world's fastest static site generator."
+    target: "Site struct (hugolib)"
+    expected_shape: "Defined in hugolib/site.go; many methods on *Site across hugolib."
+
+  - id: django
+    language: Python
+    repo: django/django
+    intro: "Django — the batteries-included web framework behind countless sites."
+    target: "QuerySet"
+    expected_shape: "Defined in django/db/models/query.py; dozens of public methods (filter, exclude, annotate, ...)."
+
+  - id: typescript
+    language: TypeScript
+    repo: microsoft/TypeScript
+    intro: "TypeScript — the compiler that types the web, written in itself."
+    target: "createScanner"
+    expected_shape: "Defined in src/compiler/scanner.ts; call sites in parser.ts and elsewhere."
+
+  - id: webpack
+    language: JavaScript
+    repo: webpack/webpack
+    intro: "webpack — the bundler at the heart of the JS build ecosystem."
+    target: "Compiler class"
+    expected_shape: "Defined in lib/Compiler.js; instantiated in lib/webpack.js and tests."
+
+  - id: redis
+    language: C
+    repo: redis/redis
+    intro: "Redis — the in-memory data store powering caches everywhere."
+    target: "dictAdd"
+    expected_shape: "Defined in src/dict.c; call sites across t_hash.c, server.c, db.c, ..."
+
+  - id: bitcoin
+    language: C++
+    repo: bitcoin/bitcoin
+    intro: "Bitcoin Core — the reference implementation of the original cryptocurrency."
+    target: "ProcessNewBlock"
+    expected_shape: "Defined in src/validation.cpp; callers in net_processing.cpp, miner/rpc, tests."
+
+  - id: spring-boot
+    language: Java
+    repo: spring-projects/spring-boot
+    intro: "Spring Boot — the convention-over-configuration backbone of enterprise Java."
+    target: "SpringApplication"
+    expected_shape: "Defined in spring-boot project; static run(...) overloads + instance run()."
+
+  - id: rails
+    language: Ruby
+    repo: rails/rails
+    intro: "Ruby on Rails — the framework that defined modern web conventions."
+    target: "ActiveRecord::Base"
+    expected_shape: "Defined in activerecord/lib/active_record/base.rb; includes many modules via include."
+
+  - id: laravel
+    language: PHP
+    repo: laravel/framework
+    intro: "Laravel — the most popular PHP framework, batteries very much included."
+    target: "Container"
+    expected_shape: "Defined in src/Illuminate/Container/Container.php; make/resolve/build resolve bindings."
