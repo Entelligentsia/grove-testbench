@@ -8,8 +8,11 @@ root="$(cd "$here/.." && pwd)"
 DB_IMAGE="${1:-grove-testbench/db:latest}"
 TAG="${2:-grove-testbench/dg:latest}"
 
-grove_bin="$(command -v grove || true)"
-[[ -n "$grove_bin" ]] || { echo "grove not found on host PATH" >&2; exit 1; }
+# Prefer an explicit binary (e.g. the freshly-built fixed one for R2):
+#   GROVE_BIN=../grove/target/release/grove scripts/build-dg.sh
+grove_bin="${GROVE_BIN:-$(command -v grove || true)}"
+[[ -n "$grove_bin" && -x "$grove_bin" ]] || { echo "grove binary not found (set GROVE_BIN=path or put grove on PATH)" >&2; exit 1; }
+echo ">> grove version: $("$grove_bin" --version 2>/dev/null || echo '(no --version)')"
 
 ctx="$root/.dgctx"; mkdir -p "$ctx"
 cp "$grove_bin" "$ctx/grove"

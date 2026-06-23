@@ -1,0 +1,98 @@
+{
+  "summary": {
+    "label": "r1",
+    "db_correct": 9,
+    "dg_correct": 4,
+    "dg_off_by_one": [
+      "django",
+      "webpack",
+      "spring-boot",
+      "rails",
+      "laravel"
+    ],
+    "n": 9
+  },
+  "repos": [
+    {
+      "repo": "tokio",
+      "true_line": 174,
+      "db_line": 174,
+      "dg_line": 174,
+      "db_correct": true,
+      "dg_correct": true,
+      "dg_off_by_one": false
+    },
+    {
+      "repo": "hugo",
+      "true_line": 103,
+      "db_line": 103,
+      "dg_line": 103,
+      "db_correct": true,
+      "dg_correct": true,
+      "dg_off_by_one": false
+    },
+    {
+      "repo": "django",
+      "true_line": 326,
+      "db_line": 326,
+      "dg_line": 325,
+      "db_correct": true,
+      "dg_correct": false,
+      "dg_off_by_one": true
+    },
+    {
+      "repo": "typescript",
+      "true_line": 1022,
+      "db_line": 1022,
+      "dg_line": 1022,
+      "db_correct": true,
+      "dg_correct": true,
+      "dg_off_by_one": false
+    },
+    {
+      "repo": "webpack",
+      "true_line": 175,
+      "db_line": 175,
+      "dg_line": 174,
+      "db_correct": true,
+      "dg_correct": false,
+      "dg_off_by_one": true
+    },
+    {
+      "repo": "bitcoin",
+      "true_line": 280,
+      "db_line": 280,
+      "dg_line": 280,
+      "db_correct": true,
+      "dg_correct": true,
+      "dg_off_by_one": false
+    },
+    {
+      "repo": "spring-boot",
+      "true_line": 191,
+      "db_line": 191,
+      "dg_line": 190,
+      "db_correct": true,
+      "dg_correct": false,
+      "dg_off_by_one": true
+    },
+    {
+      "repo": "rails",
+      "true_line": 5,
+      "db_line": 5,
+      "dg_line": 4,
+      "db_correct": true,
+      "dg_correct": false,
+      "dg_off_by_one": true
+    },
+    {
+      "repo": "laravel",
+      "true_line": 42,
+      "db_line": 42,
+      "dg_line": 41,
+      "db_correct": true,
+      "dg_correct": false,
+      "dg_off_by_one": true
+    }
+  ]
+}

@@ -119,6 +119,32 @@ On the trivial single-symbol lookup, **grove loses on every axis**:
 This is a clean cross-language confirmation of redis L1/L2: grove is pure overhead
 for simple lookups, and the off-by-one (GI-1) reproduces across **5 more repos**.
 
+### R2 plan — re-run L1 after grove#31 fix
+
+[grove#31](https://github.com/Entelligentsia/grove/issues/31) (off-by-one) is being
+fixed; because it corrupts every line citation it must be fixed before deeper rungs.
+R1 baseline is preserved: image `grove-testbench/dg:r1`, transcripts `out/r1/`,
+distilled `evidence/L1.lines.r1.json` (db 9/9, dg 4/9, off-by-one on django,
+webpack, spring-boot, rails, laravel).
+
+Once the fixed binary is built, R2 is:
+
+```bash
+# 1. build the fixed grove, then rebuild dg from THAT binary (not host PATH)
+(cd ../grove && cargo build --release)
+GROVE_BIN=../grove/target/release/grove scripts/build-dg.sh
+
+# 2. re-race L1 across all 9, then evaluate line accuracy (truth derived from source)
+scripts/run-rung-parallel.sh L1_symbol sonnet tokio hugo django typescript webpack bitcoin spring-boot rails laravel
+scripts/eval-l1-lines.sh --label r2
+
+# 3. before/after
+diff <(jq .summary evidence/L1.lines.r1.json) <(jq .summary evidence/L1.lines.r2.json)
+```
+
+Success = dg line accuracy 4/9 → **9/9**, `dg_off_by_one` empty. (Context/time
+deltas may also shift; re-aggregate with the same flow if needed.)
+
 ## Remaining rungs (pending)
 
 Per the rung-by-rung-in-parallel plan, next: L2 across all 9, then L3, L4, L5.
