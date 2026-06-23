@@ -57,6 +57,9 @@ MODEL_ARG=""; [[ -n "$MODEL" ]] && MODEL_ARG="--model $MODEL"
 # uses a valid token and nothing depends on the stale baked copy.
 # Override with CLAUDE_CREDS.
 CREDS="${CLAUDE_CREDS:-$HOME/.claude/.credentials.json}"
+# Prefer the podman-as-docker shim when present (rootless; no daemon needed).
+# Works whether the caller's PATH already includes it or not.
+[[ -d /tmp/grove-podman-shim ]] && export PATH="/tmp/grove-podman-shim:$PATH"
 # Same model + identical flags both sides; grove on/off is the only variable.
 CAP_ENV='LANG=C.UTF-8 LC_ALL=C.UTF-8'
 if [[ "$BACKEND" == docker ]]; then

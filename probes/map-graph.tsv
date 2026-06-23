@@ -1,0 +1,7 @@
+# map-graph probe (grove#34 / GI-3 over-read non-convergence): the `map` command
+# must return a directory-level definition graph WITH reference edges and WITHOUT
+# source bodies -- so a broad architectural question converges on one call instead
+# of N symbols+source round-trips. Verifies the fix's mechanism deterministically.
+# kind<TAB>dir(absolute, inside container)<TAB>min-entries<TAB>min-edges
+mapgraph	/home/bench/repos/redis/src	10	5
+mapgraph	/home/bench/repos/tokio/tokio/src/runtime	5	1

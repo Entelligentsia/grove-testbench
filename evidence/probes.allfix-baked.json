@@ -1,0 +1,71 @@
+{
+  "label": "allfix-baked",
+  "binary": "(baked)",
+  "passed": 9,
+  "failed": 0,
+  "probes": [
+    {
+      "repo": "tokio",
+      "symbol": "Runtime",
+      "true_line": "97",
+      "got_line": "97",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "hugo",
+      "symbol": "Site",
+      "true_line": "103",
+      "got_line": "103",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "django",
+      "symbol": "QuerySet",
+      "true_line": "326",
+      "got_line": "326",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "typescript",
+      "symbol": "Scanner",
+      "true_line": "51",
+      "got_line": "51",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "webpack",
+      "symbol": "Compiler",
+      "true_line": "175",
+      "got_line": "175",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "bitcoin",
+      "symbol": "CMutableTransaction",
+      "true_line": "357",
+      "got_line": "357",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "spring-boot",
+      "symbol": "SpringApplication",
+      "true_line": "191",
+      "got_line": "191",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "rails",
+      "symbol": "Relation",
+      "true_line": "5",
+      "got_line": "5",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "laravel",
+      "symbol": "Model",
+      "true_line": "42",
+      "got_line": "42",
+      "verdict": "PASS"
+    }
+  ]
+}

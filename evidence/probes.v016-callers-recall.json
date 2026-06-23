@@ -1,0 +1,29 @@
+{
+  "label": "v016-callers-recall",
+  "binary": "/home/boni/.nvm/versions/node/v24.14.1/lib/node_modules/@entelligentsia/grove/vendor/grove",
+  "passed": 1,
+  "failed": 2,
+  "probes": [
+    {
+      "repo": "spring-boot",
+      "symbol": "SpringApplication",
+      "true_line": ">= 1",
+      "got_line": "0",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "django",
+      "symbol": "QuerySet",
+      "true_line": ">= 1",
+      "got_line": "0",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "hugo",
+      "symbol": "Site",
+      "true_line": ">= 1",
+      "got_line": "12",
+      "verdict": "PASS"
+    }
+  ]
+}

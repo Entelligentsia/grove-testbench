@@ -9,6 +9,10 @@
 #               real-subpath and must NOT include the generated gen-subpath.
 #   callersmin  sym<TAB>dir<TAB>min-count   (GI-6)
 #               grove callers <sym> -d <dir> --json must return >= min-count sites.
+#   mapgraph    dir<TAB>min-entries<TAB>min-edges   (grove#34 / GI-3)
+#               grove map <dir> --json must return a multi-file definition graph
+#               with >= min-entries definitions, >= min-edges outgoing reference
+#               edges, and NO `source` bodies (the anti-over-read guarantee).
 #
 # Rows whose first column is not one of {line,nodecl,callersmin} are treated as a
 # legacy `line` probe (symbol=col1, file=col2, pat=col3) so the original
@@ -44,6 +48,22 @@ do_nodecl() {  # sym dir real gen
   printf '%s\t%s\t%s\t%s\t%s\n' "$repo" "$sym" "incl $real & excl $gen" "$got" "$verdict"
 }
 
+do_mapgraph() {  # dir min-entries min-edges
+  local dir="$1" min_entries="$2" min_edges="$3"
+  local repo; repo="$(echo "$dir" | sed 's#.*/repos/\([^/]*\).*#\1#')"
+  [[ "$repo" == "$dir" ]] && repo="$(basename "$dir")"
+  local out files entries edges bodies verdict=FAIL got
+  out="$(grove map "$dir" --json 2>/dev/null || true)"
+  files="$(jq 'if type=="array" then length else 0 end' <<<"$out" 2>/dev/null || echo 0)"
+  entries="$(jq '[.[].entries // [] | length] | add // 0' <<<"$out" 2>/dev/null || echo 0)"
+  edges="$(jq '[.[].entries // [] | .[].references // [] | length] | add // 0' <<<"$out" 2>/dev/null || echo 0)"
+  # The graph must carry reference edges but NO source bodies (anti-over-read).
+  bodies="$(jq '[.[].entries // [] | .[] | has("source")] | any // false' <<<"$out" 2>/dev/null || echo true)"
+  got="files=$files entries=$entries edges=$edges bodies=$bodies"
+  [[ "${files:-0}" -ge 1 && "${entries:-0}" -ge "$min_entries" && "${edges:-0}" -ge "$min_edges" && "$bodies" == "false" ]] && verdict=PASS
+  printf '%s\t%s\t%s\t%s\t%s\n' "$repo" "map:$(basename "$dir")" "files>=1 entries>=$min_entries edges>=$min_edges no-bodies" "$got" "$verdict"
+}
+
 do_callersmin() {  # sym dir min
   local sym="$1" dir="$2" min="$3"
   local repo; repo="$(basename "$dir")"
@@ -61,6 +81,7 @@ while IFS=$'\t' read -r f1 f2 f3 f4 _rest || [[ -n "${f1:-}" ]]; do
     line)       do_line "$f2" "$f3" "$f4" ;;
     nodecl)     do_nodecl "$f2" "$f3" "$f4" "$_rest" ;;
     callersmin) do_callersmin "$f2" "$f3" "$f4" ;;
+    mapgraph)   do_mapgraph "$f2" "$f3" "$f4" ;;
     *)          do_line "$f1" "$f2" "$f3" ;;   # legacy line-accuracy rows
   esac
 done < "$spec"

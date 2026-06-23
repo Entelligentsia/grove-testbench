@@ -1,0 +1,22 @@
+{
+  "label": "v016-generated-decls",
+  "binary": "/home/boni/.nvm/versions/node/v24.14.1/lib/node_modules/@entelligentsia/grove/vendor/grove",
+  "passed": 0,
+  "failed": 2,
+  "probes": [
+    {
+      "repo": "typescript",
+      "symbol": "Scanner",
+      "true_line": "incl src/compiler/scanner.ts & excl tests/baselines/reference/api/typescript.d.ts",
+      "got_line": "real=1 gen=1",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "webpack",
+      "symbol": "Compiler",
+      "true_line": "incl lib/Compiler.js & excl declarations/LoaderContext.d.ts",
+      "got_line": "real=1 gen=1",
+      "verdict": "FAIL"
+    }
+  ]
+}

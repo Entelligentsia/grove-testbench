@@ -1,0 +1,7 @@
+{
+  "label": "fix-34",
+  "binary": "/home/boni/src/grove-engineering/grove/target/release/grove",
+  "passed": 0,
+  "failed": 0,
+  "probes": []
+}

@@ -1,0 +1,71 @@
+{
+  "label": "v016-line-accuracy",
+  "binary": "/home/boni/.nvm/versions/node/v24.14.1/lib/node_modules/@entelligentsia/grove/vendor/grove",
+  "passed": 0,
+  "failed": 9,
+  "probes": [
+    {
+      "repo": "tokio",
+      "symbol": "Runtime",
+      "true_line": "97",
+      "got_line": "96",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "hugo",
+      "symbol": "Site",
+      "true_line": "103",
+      "got_line": "102",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "django",
+      "symbol": "QuerySet",
+      "true_line": "326",
+      "got_line": "325",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "typescript",
+      "symbol": "Scanner",
+      "true_line": "51",
+      "got_line": "50",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "webpack",
+      "symbol": "Compiler",
+      "true_line": "175",
+      "got_line": "174",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "bitcoin",
+      "symbol": "CMutableTransaction",
+      "true_line": "357",
+      "got_line": "356",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "spring-boot",
+      "symbol": "SpringApplication",
+      "true_line": "191",
+      "got_line": "190",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "rails",
+      "symbol": "Relation",
+      "true_line": "5",
+      "got_line": "4",
+      "verdict": "FAIL"
+    },
+    {
+      "repo": "laravel",
+      "symbol": "Model",
+      "true_line": "42",
+      "got_line": "41",
+      "verdict": "FAIL"
+    }
+  ]
+}

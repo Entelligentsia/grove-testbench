@@ -1,0 +1,29 @@
+{
+  "label": "fixed-34-callers-recall",
+  "binary": "/home/boni/src/grove-engineering/grove/target/release/grove",
+  "passed": 3,
+  "failed": 0,
+  "probes": [
+    {
+      "repo": "spring-boot",
+      "symbol": "SpringApplication",
+      "true_line": ">= 1",
+      "got_line": "886",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "django",
+      "symbol": "QuerySet",
+      "true_line": ">= 1",
+      "got_line": "261",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "hugo",
+      "symbol": "Site",
+      "true_line": ">= 1",
+      "got_line": "504",
+      "verdict": "PASS"
+    }
+  ]
+}

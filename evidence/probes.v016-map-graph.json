@@ -1,0 +1,22 @@
+{
+  "label": "v016-map-graph",
+  "binary": "/home/boni/.nvm/versions/node/v24.14.1/lib/node_modules/@entelligentsia/grove/vendor/grove",
+  "passed": 2,
+  "failed": 0,
+  "probes": [
+    {
+      "repo": "redis",
+      "symbol": "map:src",
+      "true_line": "files>=1 entries>=10 edges>=5 no-bodies",
+      "got_line": "files=205 entries=9393 edges=26177 bodies=false",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "tokio",
+      "symbol": "map:runtime",
+      "true_line": "files>=1 entries>=5 edges>=1 no-bodies",
+      "got_line": "files=123 entries=1540 edges=3171 bodies=false",
+      "verdict": "PASS"
+    }
+  ]
+}

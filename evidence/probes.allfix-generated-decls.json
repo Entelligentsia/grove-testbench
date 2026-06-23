@@ -1,0 +1,22 @@
+{
+  "label": "allfix-generated-decls",
+  "binary": "/home/boni/src/grove-engineering/grove/target/release/grove",
+  "passed": 2,
+  "failed": 0,
+  "probes": [
+    {
+      "repo": "typescript",
+      "symbol": "Scanner",
+      "true_line": "incl src/compiler/scanner.ts & excl tests/baselines/reference/api/typescript.d.ts",
+      "got_line": "real=1 gen=0",
+      "verdict": "PASS"
+    },
+    {
+      "repo": "webpack",
+      "symbol": "Compiler",
+      "true_line": "incl lib/Compiler.js & excl declarations/LoaderContext.d.ts",
+      "got_line": "real=1 gen=0",
+      "verdict": "PASS"
+    }
+  ]
+}
