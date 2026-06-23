@@ -121,7 +121,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-6 — `callers` under-covers common symbols (low recall)
 
-- **Status:** **filed** [#33](https://github.com/Entelligentsia/grove/issues/33) (confirmed; L2 quality eval, ≥3 repos: spring-boot, hugo, django) — draft: [`reports/draft-issues/GI-6-callers-low-recall.md`](reports/draft-issues/GI-6-callers-low-recall.md)
+- **Status:** **FIXED — verified** [#33](https://github.com/Entelligentsia/grove/issues/33) (grove `5c4706e` `fix(ops): broaden callers to all reference kinds + textual fallback`). Tier-1 probe `probes/callers-recall.tsv` now **PASS 3 · FAIL 0** (pre-fix all returned `[]`). Recall parity vs `grep -rn` whole-word: SpringApplication 899 vs 887 (101%), QuerySet 261 vs 262 (100%), Site 504 vs 497 (101%). Draft: [`reports/draft-issues/GI-6-callers-low-recall.md`](reports/draft-issues/GI-6-callers-low-recall.md)
 - **Seen in:** spring-boot (dg covered **<25%** of real `SpringApplication`
   references — only grove-tagged cross-refs), hugo & django (dg undercounted real
   references ~3×).
