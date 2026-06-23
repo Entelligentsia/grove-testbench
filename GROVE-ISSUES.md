@@ -66,7 +66,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-3 — Over-read blow-ups / non-convergence
 
-- **Status:** **confirmed** (multiple repos, even at L1) — **ready to file** → [`reports/draft-issues/GI-3-over-read-non-convergence.md`](reports/draft-issues/GI-3-over-read-non-convergence.md)
+- **Status:** **filed** [#34](https://github.com/Entelligentsia/grove/issues/34) (confirmed; multiple repos, even at L1) — draft: [`reports/draft-issues/GI-3-over-read-non-convergence.md`](reports/draft-issues/GI-3-over-read-non-convergence.md)
 - **Seen in:** redis (L5: dg 631,035 ctx / 29 tools vs db 1,541,835 / 47 tools — db delegated to a haiku `Explore` subagent that churned 1.49M) AND **L1
   single-symbol**: tokio dg 478,568 ctx (+215%), bitcoin dg 130,860 (+167%) /
   109s, typescript dg **321s** (vs db 8s), hugo +174%. On a *one-symbol* question
@@ -104,7 +104,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-5 — References/definitions resolve to generated declaration files
 
-- **Status:** **confirmed** (L2 quality eval, 2 repos: typescript, webpack) — **ready to file** → [`reports/draft-issues/GI-5-generated-declaration-files.md`](reports/draft-issues/GI-5-generated-declaration-files.md)
+- **Status:** **filed** [#32](https://github.com/Entelligentsia/grove/issues/32) (confirmed; L2 quality eval, 2 repos: typescript, webpack) — draft: [`reports/draft-issues/GI-5-generated-declaration-files.md`](reports/draft-issues/GI-5-generated-declaration-files.md)
 - **Seen in:** typescript (`Scanner`/`createScanner` refs landed in
   `tests/baselines/reference/api/typescript.d.ts`), webpack (`Compiler` refs in
   `types.d.ts`) — instead of the real `src/`/`lib/` source.
@@ -121,7 +121,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-6 — `callers` under-covers common symbols (low recall)
 
-- **Status:** **confirmed** (L2 quality eval, ≥3 repos: spring-boot, hugo, django) — **ready to file** → [`reports/draft-issues/GI-6-callers-low-recall.md`](reports/draft-issues/GI-6-callers-low-recall.md)
+- **Status:** **filed** [#33](https://github.com/Entelligentsia/grove/issues/33) (confirmed; L2 quality eval, ≥3 repos: spring-boot, hugo, django) — draft: [`reports/draft-issues/GI-6-callers-low-recall.md`](reports/draft-issues/GI-6-callers-low-recall.md)
 - **Seen in:** spring-boot (dg covered **<25%** of real `SpringApplication`
   references — only grove-tagged cross-refs), hugo & django (dg undercounted real
   references ~3×).
@@ -147,13 +147,19 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
    stream-json excerpt, and the proposed fix.
 3. Link the filed issue back here (`Status: filed <url>`).
 
-### Ready to file now (post-L2, 2026-06-23)
+### Filed 2026-06-23 (post-L2)
 
-- **GI-3** (confirmed) — `reports/draft-issues/GI-3-over-read-non-convergence.md`
-- **GI-5** (confirmed, 2 repos) — `reports/draft-issues/GI-5-generated-declaration-files.md`
-- **GI-6** (confirmed, ≥3 repos) — `reports/draft-issues/GI-6-callers-low-recall.md`
+- **GI-3** → [#34](https://github.com/Entelligentsia/grove/issues/34) — `reports/draft-issues/GI-3-over-read-non-convergence.md`
+- **GI-5** → [#32](https://github.com/Entelligentsia/grove/issues/32) — `reports/draft-issues/GI-5-generated-declaration-files.md`
+- **GI-6** → [#33](https://github.com/Entelligentsia/grove/issues/33) — `reports/draft-issues/GI-6-callers-low-recall.md`
 
-Each draft carries the pinned SHA, prompt, measured numbers, the offending
-transcript excerpt, and proposed fix — paste directly into a `Entelligentsia/grove`
-issue. GI-2 (redis only) and GI-4 (Tier-1 probe only) stay `draft` pending a 2nd
+Each issue body carries the pinned SHA, prompt, measured numbers, the offending
+transcript excerpt, and proposed fix, plus a Fix-verification section (Tier-1
+probe rig for GI-5/GI-6 via `Dockerfile.probe`/`run-probes.sh` + the new
+`probes/generated-decls.tsv` and `probes/callers-recall.tsv`; Tier-2 re-run for
+GI-3). GI-2 (redis only) and GI-4 (Tier-1 probe only) stay `draft` pending a 2nd
 repo / agent R2.
+
+`scripts/probe-inside.sh` now dispatches on a `kind` column (`line` | `nodecl` |
+`callersmin`); legacy rows without a kind default to `line`, so
+`probes/line-accuracy.tsv` is unchanged.

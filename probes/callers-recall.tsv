@@ -1,0 +1,9 @@
+# GI-6 probe: grove `callers` must return real call sites for common symbols.
+# Reproduces the L2 bug where `callers` returned `[]` for heavily-used symbols
+# (spring-boot SpringApplication, django QuerySet) and undercounted hugo Site.
+# kind<TAB>sym<TAB>dir<TAB>min-count
+# min-count is a non-empty regression gate; the real target is parity with
+# `grep -rn <sym> <dir>` (see the issue's Tier-2 section).
+callersmin	SpringApplication	/home/bench/repos/spring-boot	1
+callersmin	QuerySet	/home/bench/repos/django	1
+callersmin	Site	/home/bench/repos/hugo	1

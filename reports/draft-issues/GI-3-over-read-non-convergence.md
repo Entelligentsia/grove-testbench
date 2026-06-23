@@ -82,6 +82,38 @@ bodies.
 4. Pair with GI-6 (recall): a recall-mode `callers` would replace many `symbols`
    fan-out calls with one structured answer.
 
+## Fix verification
+
+GI-3 is an agent-navigation/steering behavior, not grove's raw output, so there
+is **no zero-token Tier-1 probe** (the probe rig asserts CLI output, not
+convergence). Verify by re-running the affected rungs and confirming convergence
+— tool count and true context drop to/below the baseline. True context is summed
+across all models (incl. subagents) per `extract-metrics.sh`.
+
+```bash
+GROVE_BIN=../grove/target/release/grove scripts/build-dg.sh
+# one-symbol rungs (over-read on trivial lookups):
+MAXP=4 scripts/run-rung-parallel.sh L1_symbol sonnet tokio typescript
+# broad rungs (non-convergence):
+MAXP=4 scripts/run-rung-parallel.sh L2_callsites sonnet laravel
+scripts/run-race.sh opt-redis-L5_arch --repo-name redis --model sonnet   # redis ladder rung
+scripts/extract-metrics.sh opt-<repo>-<rung>   # per race
+```
+
+Success criteria (current grove 0.1.5 → fixed):
+
+| rung | metric | current | target |
+|---|---|---|---|
+| tokio L1 | tools / ctx | 12 / 479k | <=5 / <=153k |
+| typescript L1 | time | 322s | <=30s |
+| laravel L2 | tools / ctx | 39 / 486k | <=16 / <=423k |
+| redis L5 | tool seq | 17× consecutive `source` | converges (outline map, no fan-out) |
+
+A Tier-1 proxy becomes available once the proposed "subsystem map" affordance
+lands: assert `grove outline <dir>` returns a compact structured map (defs +
+edges, no bodies) in a single call, which the agent can use instead of N `source`
+calls. Add that as a `probes/` spec then.
+
 ## Evidence
 
 - Transcripts: `out/opt-redis-L5_arch.claude.dg.jsonl`,

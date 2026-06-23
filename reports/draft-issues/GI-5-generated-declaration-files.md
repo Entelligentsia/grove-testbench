@@ -64,6 +64,34 @@ mcp__grove__definition  name=Compiler dir=/home/bench/repos/webpack
 3. Optionally surface a `generated: true` flag on results that *are* generated so
    the agent/steering can choose to skip them.
 
+## Fix verification (Tier-1, agent-free, zero tokens)
+
+The probe rig (`Dockerfile.probe` + `scripts/run-probes.sh`) asserts grove's raw
+output with no agent and no tokens. The fix should make these PASS; on current
+grove (0.1.5) they FAIL because grove returns the generated decl.
+
+```bash
+scripts/build-probe.sh                                 # once: bake grammars into the probe image
+GROVE_BIN=../grove/target/release/grove \
+  scripts/run-probes.sh --label gi5 --spec probes/generated-decls.tsv
+# expect: PASS 2 · FAIL 0   (current grove: FAIL 2 — the .d.ts paths are returned)
+```
+
+Spec (`probes/generated-decls.tsv`):
+
+```
+# kind<TAB>sym<TAB>dir<TAB>real-subpath(must include)<TAB>gen-subpath(must exclude)
+nodecl  Scanner   /home/bench/repos/typescript  src/compiler/scanner.ts   tests/baselines/reference/api/typescript.d.ts
+nodecl  Compiler  /home/bench/repos/webpack     lib/Compiler.js        declarations/LoaderContext.d.ts
+```
+
+Each row runs `grove symbols <dir> --name <sym> --refs --json` and asserts the
+output **includes** the real source path and **excludes** the generated
+declaration. `run-probes.sh` exits non-zero on any FAIL (CI gate before Tier-2
+races) and writes `evidence/probes.gi5.json`. The binary under test is
+bind-mounted at run time, so iterating on the fix is `cargo build` + the script
+— no image rebuild.
+
 ## Evidence
 
 - Transcripts: `out/opt-typescript-L2_callsites.claude.dg.jsonl`,

@@ -1,0 +1,6 @@
+# GI-5 probe: grove must point at real source, not generated declaration files.
+# Reproduces the L2 bug where grove `symbols --refs` returned generated .d.ts /
+# declarations and the agent answered from the wrong file.
+# kind<TAB>sym<TAB>dir<TAB>real-subpath(must include)<TAB>gen-subpath(must exclude)
+nodecl	Scanner	/home/bench/repos/typescript	src/compiler/scanner.ts	tests/baselines/reference/api/typescript.d.ts
+nodecl	Compiler	/home/bench/repos/webpack	lib/Compiler.js	declarations/LoaderContext.d.ts

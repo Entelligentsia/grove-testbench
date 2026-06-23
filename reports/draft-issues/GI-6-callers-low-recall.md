@@ -76,6 +76,45 @@ and no textual fallback.
    scope bug?) — empty results for `SpringApplication`/`QuerySet` look like a
    defect, not just low recall.
 
+## Fix verification (Tier-1, agent-free, zero tokens)
+
+The probe rig (`Dockerfile.probe` + `scripts/run-probes.sh`) asserts grove's raw
+output with no agent. The fix should make these PASS; on current grove (0.1.5)
+spring-boot and django FAIL because `callers` returns `[]`.
+
+```bash
+scripts/build-probe.sh                                 # once: bake grammars into the probe image
+GROVE_BIN=../grove/target/release/grove \
+  scripts/run-probes.sh --label gi6 --spec probes/callers-recall.tsv
+# expect: PASS 3 · FAIL 0   (current grove: spring-boot & django FAIL — callers returns [])
+```
+
+Spec (`probes/callers-recall.tsv`):
+
+```
+# kind<TAB>sym<TAB>dir<TAB>min-count
+# min-count=1 is the non-empty regression gate; the real target is parity with `grep -rn`.
+callersmin  SpringApplication  /home/bench/repos/spring-boot  1
+callersmin  QuerySet           /home/bench/repos/django       1
+callersmin  Site                /home/bench/repos/hugo         1
+```
+
+Each row runs `grove callers <sym> -d <dir> --json` and asserts ≥ min-count call
+sites. min-count=1 is the non-empty regression gate that catches the `[]` bug;
+the real success criterion is **recall parity with `grep -rn <sym> <dir>`**,
+measured by the Tier-2 agent re-run below. `run-probes.sh` exits non-zero on any
+FAIL (CI gate) and writes `evidence/probes.gi6.json`. Binary under test is
+bind-mounted, so the fix loop is `cargo build` + the script.
+
+### Tier-2 (agent re-run, recall parity)
+
+```bash
+GROVE_BIN=../grove/target/release/grove scripts/build-dg.sh
+MAXP=4 scripts/run-rung-parallel.sh L2_callsites sonnet spring-boot django hugo
+# metrics: out/opt-<repo>-L2_callsites.claude.metrics.json  (context sums all models)
+# blind quality: re-judge vs pinned source — dg should no longer under-cover / fabricate
+```
+
 ## Evidence
 
 - Transcripts: `out/opt-spring-boot-L2_callsites.claude.dg.jsonl`,
