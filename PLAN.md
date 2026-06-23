@@ -20,8 +20,8 @@ popular codebases — and produces a side-by-side screencast for YouTube.
 | Topic | Decision |
 |---|---|
 | Matchup | **Same agent vs same agent** — Claude-vs-Claude *or* pi-vs-pi. Grove is the only variable. Never Claude-vs-pi. |
-| What I deliver | **base0** — the un-authenticated, no-grove image + full host harness. Publishable (no secrets). |
-| What you do manually | Auth (claude/pi login), grove wiring for pi (skill over grove CLI), then commit local `db` / `dg` images. |
+| What I deliver | **base** — the un-authenticated, no-grove image + full host harness. Publishable (no secrets). |
+| What you do manually | Auth (claude/pi login), grove wiring for pi (skill over grove CLI), then commit local `baseline` / `grove` images. |
 | Win metrics (on screen) | **Tokens/context, wall-clock time, tool-calls/turns.** |
 | Correctness | **Not scored / not gated** — pure speed+token+turns race. Prompts must be unambiguous. |
 | Orchestration | **Two containers, one host orchestrator** fires identical prompt at both, captures casts + metrics. |
@@ -32,21 +32,21 @@ popular codebases — and produces a side-by-side screencast for YouTube.
 ## Image lineage
 
 ```
-base0  (I deliver — Dockerfile, publishable, NO secrets, NO grove)
+base  (I deliver — Dockerfile, publishable, NO secrets, NO grove)
   ├─ node 20 + Claude Code CLI + pi CLI
   ├─ asciinema, git, build basics
   ├─ /repos/<name> — 10 codebases cloned at pinned SHAs
   └─ /harness — prompt runner, metrics extractor, scene config
         │
         ▼  (you: claude/pi auth, commit)           → kept LOCAL, never published (creds)
-   db = base0 + auth
+   baseline = base + auth
         │
         ▼  (you: install grove, register `grove serve` MCP for Claude,
         │       add pi grove-CLI skill, commit)    → kept LOCAL
-   dg = db + grove
+   grove = baseline + grove
 ```
 
-`db` = grove **off**. `dg` = grove **on**. Both authed. Race = `db` vs `dg`.
+`baseline` = grove **off**. `grove` = grove **on**. Both authed. Race = `baseline` vs `grove`.
 
 ## The 10 codebases (one per language, all in grove-registry)
 
@@ -82,11 +82,11 @@ check, not scored).
 
 ```
 grove-testbench/
-├─ Dockerfile.base0            # the publishable image
+├─ Dockerfile.base             # the publishable image
 ├─ repos.manifest             # repo → URL + pinned SHA
 ├─ scripts/
-│  ├─ build-base0.sh          # build + clone repos into image
-│  ├─ run-race.sh <repo>      # launch db & dg containers, same prompt, record casts
+│  ├─ build-base.sh           # build + clone repos into image
+│  ├─ run-race.sh <repo>      # launch baseline & grove containers, same prompt, record casts
 │  ├─ extract-metrics.sh      # tokens/turns from transcripts; time from cast
 │  ├─ render.sh               # agg: cast → mp4/gif per pane
 │  └─ compose.sh <repo>       # ffmpeg: intro card + prompt card + hstack race + results card
@@ -107,28 +107,28 @@ grove-testbench/
 ### Video, per repo (one scene)
 1. **Repo intro card** — name, language, size/def-count.
 2. **Prompt card** — large font, the exact prompt.
-3. **Race** — two asciinema panes side by side (db left, dg right).
+3. **Race** — two asciinema panes side by side (baseline left, grove right).
 4. **Results card** — bar chart: tokens / time / turns; winner stamp.
 
 Scenes concatenated → final reel → YouTube.
 
 ## What gets published vs not
 
-- **Published**: this whole repo (Dockerfile.base0, harness, scenes), all
+- **Published**: this whole repo (Dockerfile.base, harness, scenes), all
   `out/` casts + transcripts + metrics, and the final video.
-- **Never published**: `db`/`dg` images and any auth material (contain creds).
+- **Never published**: `baseline`/`grove` images and any auth material (contain creds).
 
 ## Open items for you (manual)
 
 1. Confirm/edit the 10 repos + pin SHAs.
-2. Auth Claude + pi inside `base0` → commit `db`.
+2. Auth Claude + pi inside `base` → commit `baseline`.
 3. Wire grove for pi (skill over `grove <verb>`) + register `grove serve` MCP for
-   Claude in `dg` → commit `dg`.
+   Claude in `grove` → commit `grove`.
 4. Approve per-repo prompts in `scenes/`.
 
 ## Build order I'll follow once approved
 
-1. `repos.manifest` + `Dockerfile.base0` + `build-base0.sh`.
+1. `repos.manifest` + `Dockerfile.base` + `build-base.sh`.
 2. `run-race.sh` + `extract-metrics.sh` (the orchestration core).
 3. `scenes/*.yaml` skeletons + overlay card templates.
 4. `render.sh` + `compose.sh` (asciinema→agg→ffmpeg).

@@ -109,7 +109,7 @@ bind-mounted, so the fix loop is `cargo build` + the script.
 ### Tier-2 (agent re-run, recall parity)
 
 ```bash
-GROVE_BIN=../grove/target/release/grove scripts/build-dg.sh
+GROVE_BIN=../grove/target/release/grove scripts/build-grove.sh
 MAXP=4 scripts/run-rung-parallel.sh L2_callsites sonnet spring-boot django hugo
 # metrics: out/opt-<repo>-L2_callsites.claude.metrics.json  (context sums all models)
 # blind quality: re-judge vs pinned source — dg should no longer under-cover / fabricate

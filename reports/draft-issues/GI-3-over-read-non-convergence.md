@@ -91,7 +91,7 @@ convergence). Verify by re-running the affected rungs and confirming convergence
 across all models (incl. subagents) per `extract-metrics.sh`.
 
 ```bash
-GROVE_BIN=../grove/target/release/grove scripts/build-dg.sh
+GROVE_BIN=../grove/target/release/grove scripts/build-grove.sh
 # one-symbol rungs (over-read on trivial lookups):
 MAXP=4 scripts/run-rung-parallel.sh L1_symbol sonnet tokio typescript
 # broad rungs (non-convergence):

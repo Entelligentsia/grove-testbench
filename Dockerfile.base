@@ -1,4 +1,4 @@
-# grove-testbench :: base0
+# grove-testbench :: base
 # ---------------------------------------------------------------------------
 # The publishable, secret-free base image. Contains everything needed to run
 # the race EXCEPT credentials and grove itself:
@@ -8,11 +8,11 @@
 #   - the host-side harness scripts (also handy inside the container)
 #
 # Intentionally NOT here (you add these manually, then commit local images):
-#   - auth / API keys           -> produces `db`  (grove OFF, authed)
-#   - grove binary + wiring     -> produces `dg`  (grove ON)
-# Never publish `db` / `dg`: they carry credentials.
+#   - auth / API keys           -> produces `baseline`  (grove OFF, authed)
+#   - grove binary + wiring     -> produces `grove`     (grove ON)
+# Never publish `baseline` / `grove`: they carry credentials.
 #
-# Build (from repo root):  scripts/build-base0.sh
+# Build (from repo root):  scripts/build-base.sh
 # ---------------------------------------------------------------------------
 FROM node:22-bookworm
 

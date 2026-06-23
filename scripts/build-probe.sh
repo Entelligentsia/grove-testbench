@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the probe image (base0 + baked grammars). Run RARELY — only when base0 or
+# Build the probe image (base + baked grammars). Run RARELY — only when base or
 # the grammar set changes. The binary under test is mounted at runtime by
 # run-probes.sh, so a grove fix does NOT require rebuilding this image.
 #
@@ -8,7 +8,7 @@
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/.." && pwd)"
-BASE="${BASE:-grove-testbench/base0:latest}"
+BASE="${BASE:-grove-testbench/base:latest}"
 TAG="${1:-grove-testbench/probe:latest}"
 
 grove_bin="${GROVE_BIN:-$(command -v grove || true)}"

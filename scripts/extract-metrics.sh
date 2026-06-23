@@ -6,8 +6,8 @@
 # Usage: extract-metrics.sh <scene-id> [--agent claude] [--out DIR]
 #
 # Reads (from --out):
-#   <id>.<agent>.db.jsonl   (grove OFF stream-json)
-#   <id>.<agent>.dg.jsonl   (grove ON  stream-json)
+#   <id>.<agent>.baseline.jsonl   (grove OFF stream-json)
+#   <id>.<agent>.grove.jsonl      (grove ON  stream-json)
 # Writes:
 #   <id>.<agent>.metrics.json
 #
@@ -106,24 +106,24 @@ parse_side() {
   echo "$parsed"
 }
 
-DB_JSON="$(parse_side db false)"
-DG_JSON="$(parse_side dg true)"
+BASELINE_JSON="$(parse_side baseline false)"
+GROVE_JSON="$(parse_side grove true)"
 
 OUT_FILE="$OUT/$REPO.$AGENT.metrics.json"
 jq -n \
   --arg repo "$REPO" --arg agent "$AGENT" \
-  --argjson db "$DB_JSON" --argjson dg "$DG_JSON" '
+  --argjson baseline "$BASELINE_JSON" --argjson grove "$GROVE_JSON" '
   def win(k):
-    if ($db[k] != null and $dg[k] != null)
-    then (if $dg[k] < $db[k] then "dg" elif $dg[k] > $db[k] then "db" else "tie" end)
+    if ($baseline[k] != null and $grove[k] != null)
+    then (if $grove[k] < $baseline[k] then "grove" elif $grove[k] > $baseline[k] then "baseline" else "tie" end)
     else null end;
   def delta(k):
-    if ($db[k] != null and $dg[k] != null and $db[k] != 0)
-    then (((($dg[k] - $db[k]) / $db[k]) * 100) | . * 100 | round / 100)
+    if ($baseline[k] != null and $grove[k] != null and $baseline[k] != 0)
+    then (((($grove[k] - $baseline[k]) / $baseline[k]) * 100) | . * 100 | round / 100)
     else null end;
   {
     repo: $repo, agent: $agent,
-    sides: { db: $db, dg: $dg },
+    sides: { baseline: $baseline, grove: $grove },
     # context winner/delta use context_tokens (all models, incl. subagents).
     winner: {
       context:    win("context_tokens"),

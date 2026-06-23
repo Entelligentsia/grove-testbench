@@ -38,26 +38,26 @@ for r in "${REPOS[@]}"; do
     | .winner as $w
     | {
         repo: $repo,
-        db_context:         $s.db.context_tokens,
-        dg_context:         $s.dg.context_tokens,
-        db_subagent_ctx:    $s.db.subagent_context_tokens,
-        dg_subagent_ctx:    $s.dg.subagent_context_tokens,
-        db_delegated:       $s.db.delegated,
-        dg_delegated:       $s.dg.delegated,
-        ctx_delta_pct:      $d.context,
-        ctx_winner:         $w.context,
-        db_time_s:          ($s.db.duration_s | floor),
-        dg_time_s:          ($s.dg.duration_s | floor),
-        time_winner:        $w.time,
-        db_turns:           $s.db.turns,
-        dg_turns:           $s.dg.turns,
-        db_tools:           $s.db.tool_calls,
-        dg_tools:           $s.dg.tool_calls,
-        db_parent_tools:    $s.db.parent_tool_calls,
-        dg_parent_tools:    $s.dg.parent_tool_calls,
-        db_subagent_tools:  $s.db.subagent_tool_calls,
-        dg_subagent_tools:  $s.dg.subagent_tool_calls,
-        tool_winner:        $w.tool_calls
+        baseline_context:         $s.baseline.context_tokens,
+        grove_context:            $s.grove.context_tokens,
+        baseline_subagent_ctx:    $s.baseline.subagent_context_tokens,
+        grove_subagent_ctx:       $s.grove.subagent_context_tokens,
+        baseline_delegated:       $s.baseline.delegated,
+        grove_delegated:          $s.grove.delegated,
+        ctx_delta_pct:            $d.context,
+        ctx_winner:               $w.context,
+        baseline_time_s:          ($s.baseline.duration_s | floor),
+        grove_time_s:             ($s.grove.duration_s | floor),
+        time_winner:              $w.time,
+        baseline_turns:           $s.baseline.turns,
+        grove_turns:              $s.grove.turns,
+        baseline_tools:           $s.baseline.tool_calls,
+        grove_tools:              $s.grove.tool_calls,
+        baseline_parent_tools:    $s.baseline.parent_tool_calls,
+        grove_parent_tools:       $s.grove.parent_tool_calls,
+        baseline_subagent_tools:  $s.baseline.subagent_tool_calls,
+        grove_subagent_tools:     $s.grove.subagent_tool_calls,
+        tool_winner:              $w.tool_calls
       }' "$m")")
 done
 
@@ -69,14 +69,14 @@ jq -n --arg rung "$RUNG" --arg model "sonnet" --arg grove "fixed (post-#31)" \
       rung: $rung, model: $model, grove: $grove,
       repos: $rs,
       summary: {
-        ctx_db_wins:        ([$rs[] | select(.ctx_winner=="db")] | length),
-        ctx_dg_wins:        ([$rs[] | select(.ctx_winner=="dg")] | length),
+        ctx_baseline_wins:  ([$rs[] | select(.ctx_winner=="baseline")] | length),
+        ctx_grove_wins:     ([$rs[] | select(.ctx_winner=="grove")] | length),
         ctx_ties:           ([$rs[] | select(.ctx_winner=="tie")] | length),
-        time_db_wins:       ([$rs[] | select(.time_winner=="db")] | length),
-        time_dg_wins:       ([$rs[] | select(.time_winner=="dg")] | length),
-        tools_dg_wins:      ([$rs[] | select(.tool_winner=="dg")] | length),
-        tools_db_wins:      ([$rs[] | select(.tool_winner=="db")] | length),
-        dg_ctx_wins_on:     [$rs[] | select(.ctx_winner=="dg") | .repo],
+        time_baseline_wins: ([$rs[] | select(.time_winner=="baseline")] | length),
+        time_grove_wins:    ([$rs[] | select(.time_winner=="grove")] | length),
+        tools_grove_wins:   ([$rs[] | select(.tool_winner=="grove")] | length),
+        tools_baseline_wins:([$rs[] | select(.tool_winner=="baseline")] | length),
+        grove_ctx_wins_on:  [$rs[] | select(.ctx_winner=="grove") | .repo],
         note: "context_tokens sums ALL models incl. subagents. subagent_ctx / delegated / *_subagent_tools decompose the hidden subagent work."
       }
     }' > "$OUTFILE"

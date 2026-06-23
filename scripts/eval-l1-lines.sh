@@ -3,16 +3,16 @@
 # TRUE line from the pinned source (grep -n) so it can't drift. Reusable for R1
 # (buggy grove) and R2 (after grove#31 fix) — pass --label to tag the output.
 #
-# Usage: eval-l1-lines.sh [--label r2] [--dg-img grove-testbench/dg:latest] [--out DIR]
+# Usage: eval-l1-lines.sh [--label r2] [--grove-img grove-testbench/grove:latest] [--out DIR]
 #
 # Writes evidence/L1.lines.<label>.json and prints a per-repo table:
-#   true line | db line (correct?) | dg line (correct? off-by-one?)
+#   true line | baseline line (correct?) | grove line (correct? off-by-one?)
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/.." && pwd)"
-LABEL="r1"; DG_IMG="grove-testbench/dg:latest"; OUT="$root/out"
+LABEL="r1"; DG_IMG="grove-testbench/grove:latest"; OUT="$root/out"
 while [[ $# -gt 0 ]]; do case "$1" in
-  --label) LABEL="$2"; shift 2;; --dg-img) DG_IMG="$2"; shift 2;; --out) OUT="$2"; shift 2;;
+  --label) LABEL="$2"; shift 2;; --grove-img) DG_IMG="$2"; shift 2;; --out) OUT="$2"; shift 2;;
   *) echo "unknown $1">&2; exit 2;; esac; done
 
 # repo | container relpath | grep -E pattern locating the definition's true line
@@ -28,7 +28,7 @@ rails	rails/activerecord/lib/active_record/relation.rb	class Relation
 laravel	laravel/src/Illuminate/Database/Eloquent/Model.php	abstract class Model
 TSV
 
-# 1) derive true lines from the dg image source (grep -n is 1-indexed)
+# 1) derive true lines from the grove image source (grep -n is 1-indexed)
 cfg="$OUT/.cfg"; mkdir -p "$cfg"; printf '%s\n' "$TABLE" > "$cfg/l1table.tsv"
 truths="$(sg docker -c "docker run --rm -v '$cfg:/cfg:ro' '$DG_IMG' bash -lc '
 cd /home/bench/repos
@@ -63,21 +63,21 @@ def claimed(repo,side):
     return best[1] if best else None
 repos="tokio hugo django typescript webpack bitcoin spring-boot rails laravel".split()
 rows=[]
-print(f"\n=== L1 line accuracy [{LABEL}] (dg img per --dg-img) ===")
-print(f"{'repo':12} {'true':>5} | {'db':>5} {'ok':>3} | {'dg':>5} {'ok':>3} {'off-1?':>7}")
-print("-"*54)
+print(f"\n=== L1 line accuracy [{LABEL}] (grove img per --grove-img) ===")
+print(f"{'repo':12} {'true':>5} | {'baseline':>8} {'ok':>3} | {'grove':>5} {'ok':>3} {'off-1?':>7}")
+print("-"*57)
 for r in repos:
-    t=truth.get(r); db=claimed(r,"db"); dg=claimed(r,"dg")
-    dbok = (db==t); dgok=(dg==t); off1=(dg is not None and t is not None and dg==t-1)
-    rows.append(dict(repo=r,true_line=t,db_line=db,dg_line=dg,db_correct=dbok,dg_correct=dgok,dg_off_by_one=off1))
-    print(f"{r:12} {str(t):>5} | {str(db):>5} {('Y' if dbok else 'N'):>3} | {str(dg):>5} {('Y' if dgok else 'N'):>3} {('YES' if off1 else ''):>7}")
+    t=truth.get(r); base=claimed(r,"baseline"); grv=claimed(r,"grove")
+    baseok=(base==t); grvok=(grv==t); off1=(grv is not None and t is not None and grv==t-1)
+    rows.append(dict(repo=r,true_line=t,baseline_line=base,grove_line=grv,baseline_correct=baseok,grove_correct=grvok,grove_off_by_one=off1))
+    print(f"{r:12} {str(t):>5} | {str(base):>8} {('Y' if baseok else 'N'):>3} | {str(grv):>5} {('Y' if grvok else 'N'):>3} {('YES' if off1 else ''):>7}")
 summ=dict(label=LABEL,
-          db_correct=sum(1 for x in rows if x['db_correct']),
-          dg_correct=sum(1 for x in rows if x['dg_correct']),
-          dg_off_by_one=[x['repo'] for x in rows if x['dg_off_by_one']],
+          baseline_correct=sum(1 for x in rows if x['baseline_correct']),
+          grove_correct=sum(1 for x in rows if x['grove_correct']),
+          grove_off_by_one=[x['repo'] for x in rows if x['grove_off_by_one']],
           n=len(rows))
-print("-"*54)
-print(f"db correct {summ['db_correct']}/{summ['n']} · dg correct {summ['dg_correct']}/{summ['n']} · dg off-by-one: {summ['dg_off_by_one'] or 'none'}")
+print("-"*57)
+print(f"baseline correct {summ['baseline_correct']}/{summ['n']} · grove correct {summ['grove_correct']}/{summ['n']} · grove off-by-one: {summ['grove_off_by_one'] or 'none'}")
 out=dict(summary=summ,repos=rows)
 ev=os.path.join(root,"evidence",f"L1.lines.{LABEL}.json")
 json.dump(out,open(ev,"w"),indent=2)

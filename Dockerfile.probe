@@ -1,9 +1,9 @@
-# probe = base0 + grammars baked in. NO auth, NO Claude, NO agent surface.
+# probe = base + grammars baked in. NO auth, NO Claude, NO agent surface.
 # A reusable, deterministic rig for verifying grove's RAW output against the 10
 # testbench repos with zero tokens. The grove binary under test is bind-mounted
 # at RUN time (run-probes.sh), so iterating on a fix needs no image rebuild —
 # only the grammars (which are version-stable) are baked here.
-ARG BASE=grove-testbench/base0:latest
+ARG BASE=grove-testbench/base:latest
 FROM ${BASE}
 
 # A grove binary is needed only to populate the grammar cache at build time;

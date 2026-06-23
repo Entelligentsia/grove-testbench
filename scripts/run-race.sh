@@ -4,18 +4,18 @@
 # source (synth-cast.py -> render.sh). No interactive TUI capture — reliable,
 # no startup gates.
 #
-#   db side = grove OFF  (--strict-mcp-config + empty config)
-#   dg side = grove ON   (--strict-mcp-config + grove config)
+#   baseline side = grove OFF  (--strict-mcp-config + empty config)
+#   grove     side = grove ON   (--strict-mcp-config + grove config)
 #
 # Backends:
-#   --backend docker   (default) run inside db/dg images
+#   --backend docker   (default) run inside baseline/grove images
 #   --backend local              run host `claude` against --repo-dir (for testing)
 #
 # Host deps: jq (+ docker for docker backend; +claude for local).
 #
 # Usage:
 #   run-race.sh <scene-id> [--agent claude] [--backend docker|local]
-#               [--repo-dir DIR] [--db IMG] [--dg IMG] [--out DIR] [--model M]
+#               [--repo-dir DIR] [--baseline IMG] [--grove IMG] [--out DIR] [--model M]
 set -uo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,8 +26,8 @@ BACKEND=docker
 REPO_DIR=""
 REPO_NAME=""          # underlying codebase (defaults to scene id); decouples
                       # a synthetic scene id (e.g. opt-redis-L3) from the repo
-DB_IMG=grove-testbench/db:latest
-DG_IMG=grove-testbench/dg:latest
+DB_IMG=grove-testbench/baseline:latest
+DG_IMG=grove-testbench/grove:latest
 OUT="$root/out"
 MODEL=""              # pin a model for a consistent benchmark, e.g. opus / sonnet
 REPO=""
@@ -38,8 +38,8 @@ while [[ $# -gt 0 ]]; do
     --backend)  BACKEND="$2"; shift 2 ;;
     --repo-dir) REPO_DIR="$2"; shift 2 ;;
     --repo-name) REPO_NAME="$2"; shift 2 ;;
-    --db)       DB_IMG="$2"; shift 2 ;;
-    --dg)       DG_IMG="$2"; shift 2 ;;
+    --baseline) DB_IMG="$2"; shift 2 ;;
+    --grove)    DG_IMG="$2"; shift 2 ;;
     --out)      OUT="$2"; shift 2 ;;
     --model)    MODEL="$2"; shift 2 ;;
     -*)         echo "unknown flag: $1" >&2; exit 2 ;;
@@ -51,10 +51,11 @@ REPO_NAME="${REPO_NAME:-$REPO}"
 
 command -v jq >/dev/null || { echo "host dep missing: jq" >&2; exit 1; }
 MODEL_ARG=""; [[ -n "$MODEL" ]] && MODEL_ARG="--model $MODEL"
-# Auth: the db/dg images bake OAuth creds that EXPIRE (and the refresh token
-# rotates, which breaks isolated --rm containers — first refresh wins, rest 401).
-# Mount the host's live credentials read-only instead, so every container uses a
-# valid token and nothing depends on the stale baked copy. Override with CLAUDE_CREDS.
+# Auth: the baseline/grove images bake OAuth creds that EXPIRE (and the refresh
+# token rotates, which breaks isolated --rm containers — first refresh wins, rest
+# 401). Mount the host's live credentials read-only instead, so every container
+# uses a valid token and nothing depends on the stale baked copy.
+# Override with CLAUDE_CREDS.
 CREDS="${CLAUDE_CREDS:-$HOME/.claude/.credentials.json}"
 # Same model + identical flags both sides; grove on/off is the only variable.
 CAP_ENV='LANG=C.UTF-8 LC_ALL=C.UTF-8'
@@ -87,9 +88,9 @@ if [[ -f "$CREDS" ]]; then install -m 0644 "$CREDS" "$CFG/creds.json" && HAVE_CR
 # --- realistic base steering (fair baseline) -------------------------------
 # If claude-md/<repo>.base.md exists, BOTH sides get it as the repo's CLAUDE.md
 # so the comparison is apples-to-apples: identical project guidance, and grove
-# is the ONLY variable. db = base only; dg = base + its baked grove block
-# (the <!-- grove:start -->..<!-- grove:end --> section grove init wrote). With
-# no base file present, behaviour is unchanged (db vanilla, dg grove-only).
+# is the ONLY variable. baseline = base only; grove = base + its baked grove
+# block (the <!-- grove:start -->..<!-- grove:end --> section grove init wrote).
+# With no base file present, behaviour is unchanged (baseline vanilla, grove-only).
 BASEMD="$root/claude-md/$REPO_NAME.base.md"
 HAVE_BASE=0
 if [[ -f "$BASEMD" ]]; then cp "$BASEMD" "$CFG/base.md"; HAVE_BASE=1; fi
@@ -105,26 +106,26 @@ slug_of() { echo "$1" | sed 's#/#-#g'; }
 capture_side() {
   local side="$1"
   local mjson="$OUT/$REPO.$AGENT.$side.jsonl"
-  local grove_state; grove_state=$([[ "$side" == dg ]] && echo ON || echo OFF)
-  local cfgname; cfgname=$([[ "$side" == dg ]] && echo grove-mcp.json || echo empty-mcp.json)
+  local grove_state; grove_state=$([[ "$side" == grove ]] && echo ON || echo OFF)
+  local cfgname; cfgname=$([[ "$side" == grove ]] && echo grove-mcp.json || echo empty-mcp.json)
   local inner
 
   if [[ "$BACKEND" == local ]]; then
     inner="cd '$REPO_DIR' && env -u ANTHROPIC_API_KEY -u TMUX $CAP_ENV claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions $MODEL_ARG --strict-mcp-config --mcp-config '$CFG/$cfgname'"
   else
-    local img; img=$([[ "$side" == dg ]] && echo "$DG_IMG" || echo "$DB_IMG")
+    local img; img=$([[ "$side" == grove ]] && echo "$DG_IMG" || echo "$DB_IMG")
     local crepo="/home/bench/repos/$REPO_NAME"
     local denv="-e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e COLORTERM=truecolor"
     # live host creds over the image's expired baked ones (read-only; token is
     # valid for the session so no in-container refresh/rotation is needed)
     local credmount=""
     [[ "$HAVE_CREDS" == 1 ]] && credmount="-v '$CFG/creds.json:/home/bench/.claude/.credentials.json:ro'"
-    # inject the fair base steering, if provided: db gets base only; dg gets
-    # base prepended to its baked grove block (both sides end up with the same
-    # project guidance, dg additionally steered to grove).
+    # inject the fair base steering, if provided: baseline gets base only; grove
+    # gets base prepended to its baked grove block (both sides end up with the
+    # same project guidance, grove side additionally steered to grove).
     local inject=""
     if [[ "$HAVE_BASE" == 1 ]]; then
-      if [[ "$side" == dg ]]; then
+      if [[ "$side" == grove ]]; then
         inject="cat /cfg/base.md $crepo/CLAUDE.md > /tmp/cm 2>/dev/null && cp /tmp/cm $crepo/CLAUDE.md; "
       else
         inject="cp /cfg/base.md $crepo/CLAUDE.md; "
@@ -142,12 +143,12 @@ capture_side() {
   fi
 }
 
-echo "=== RACE: $REPO ($AGENT, $BACKEND) — db (grove OFF) vs dg (grove ON) ==="
+echo "=== RACE: $REPO ($AGENT, $BACKEND) — baseline (grove OFF) vs grove (grove ON) ==="
 echo "    prompt: $PROMPT"
-capture_side db
-capture_side dg
+capture_side baseline
+capture_side grove
 echo
-echo "stream-json: $OUT/$REPO.$AGENT.{db,dg}.jsonl"
+echo "stream-json: $OUT/$REPO.$AGENT.{baseline,grove}.jsonl"
 echo "next:"
 echo "  scripts/extract-metrics.sh $REPO --agent $AGENT"
 echo "  scripts/render.sh $REPO --agent $AGENT      # synth casts -> video"
