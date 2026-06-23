@@ -24,6 +24,8 @@ root="$(cd "$here/.." && pwd)"
 AGENT=claude
 BACKEND=docker
 REPO_DIR=""
+REPO_NAME=""          # underlying codebase (defaults to scene id); decouples
+                      # a synthetic scene id (e.g. opt-redis-L3) from the repo
 DB_IMG=grove-testbench/db:latest
 DG_IMG=grove-testbench/dg:latest
 OUT="$root/out"
@@ -35,6 +37,7 @@ while [[ $# -gt 0 ]]; do
     --agent)    AGENT="$2"; shift 2 ;;
     --backend)  BACKEND="$2"; shift 2 ;;
     --repo-dir) REPO_DIR="$2"; shift 2 ;;
+    --repo-name) REPO_NAME="$2"; shift 2 ;;
     --db)       DB_IMG="$2"; shift 2 ;;
     --dg)       DG_IMG="$2"; shift 2 ;;
     --out)      OUT="$2"; shift 2 ;;
@@ -44,6 +47,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 [[ -n "$REPO" ]] || { echo "usage: run-race.sh <scene-id> [--backend docker|local]" >&2; exit 2; }
+REPO_NAME="${REPO_NAME:-$REPO}"
 
 command -v jq >/dev/null || { echo "host dep missing: jq" >&2; exit 1; }
 MODEL_ARG=""; [[ -n "$MODEL" ]] && MODEL_ARG="--model $MODEL"
@@ -69,6 +73,16 @@ CFG="$OUT/.cfg"; mkdir -p "$CFG"
 printf '{ "mcpServers": {} }\n' > "$CFG/empty-mcp.json"
 printf '{ "mcpServers": { "grove": { "command": "grove", "args": ["serve"] } } }\n' > "$CFG/grove-mcp.json"
 
+# --- realistic base steering (fair baseline) -------------------------------
+# If claude-md/<repo>.base.md exists, BOTH sides get it as the repo's CLAUDE.md
+# so the comparison is apples-to-apples: identical project guidance, and grove
+# is the ONLY variable. db = base only; dg = base + its baked grove block
+# (the <!-- grove:start -->..<!-- grove:end --> section grove init wrote). With
+# no base file present, behaviour is unchanged (db vanilla, dg grove-only).
+BASEMD="$root/claude-md/$REPO_NAME.base.md"
+HAVE_BASE=0
+if [[ -f "$BASEMD" ]]; then cp "$BASEMD" "$CFG/base.md"; HAVE_BASE=1; fi
+
 slug_of() { echo "$1" | sed 's#/#-#g'; }
 
 # --- capture one side ------------------------------------------------------
@@ -88,9 +102,20 @@ capture_side() {
     inner="cd '$REPO_DIR' && env -u ANTHROPIC_API_KEY -u TMUX $CAP_ENV claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions $MODEL_ARG --strict-mcp-config --mcp-config '$CFG/$cfgname'"
   else
     local img; img=$([[ "$side" == dg ]] && echo "$DG_IMG" || echo "$DB_IMG")
-    local crepo="/home/bench/repos/$REPO"
+    local crepo="/home/bench/repos/$REPO_NAME"
     local denv="-e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e COLORTERM=truecolor"
-    inner="docker run --rm $denv -e RACE_PROMPT -v '$CFG:/cfg:ro' '$img' bash -lc \"cd $crepo && claude -p \\\"\\\$RACE_PROMPT\\\" --output-format stream-json --verbose --dangerously-skip-permissions $MODEL_ARG --strict-mcp-config --mcp-config /cfg/$cfgname\""
+    # inject the fair base steering, if provided: db gets base only; dg gets
+    # base prepended to its baked grove block (both sides end up with the same
+    # project guidance, dg additionally steered to grove).
+    local inject=""
+    if [[ "$HAVE_BASE" == 1 ]]; then
+      if [[ "$side" == dg ]]; then
+        inject="cat /cfg/base.md $crepo/CLAUDE.md > /tmp/cm 2>/dev/null && cp /tmp/cm $crepo/CLAUDE.md; "
+      else
+        inject="cp /cfg/base.md $crepo/CLAUDE.md; "
+      fi
+    fi
+    inner="docker run --rm $denv -e RACE_PROMPT -v '$CFG:/cfg:ro' '$img' bash -lc \"cd $crepo && ${inject}claude -p \\\"\\\$RACE_PROMPT\\\" --output-format stream-json --verbose --dangerously-skip-permissions $MODEL_ARG --strict-mcp-config --mcp-config /cfg/$cfgname\""
   fi
 
   echo ">> [$side] grove $grove_state — running (headless stream-json)"

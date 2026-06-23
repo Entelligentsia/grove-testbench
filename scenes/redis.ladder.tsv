@@ -1,0 +1,6 @@
+# redis complexity ladder — LABEL<TAB>PROMPT, escalating reading breadth
+L1_symbol	Where is the `dictAdd` function defined? Give the file and line.
+L2_callsites	Where is `dictAdd` defined, and list every call site across the source tree with file and line.
+L3_flow	Trace how a SET command is executed in Redis: name every function it passes through from the moment the command is dispatched to where the value is stored in the keyspace, in order.
+L4_subsystem	Explain how Redis key expiration works end to end. Identify the functions that set a TTL, lazily expire a key on access, and actively expire keys in the cron, and describe how they call each other.
+L5_arch	Give an architectural overview of how a write command propagates from a master to its replicas in Redis: name every function involved on both the master side (command propagation, replication backlog, feeding replicas) and the replica side (receiving and applying the stream), and how they connect.

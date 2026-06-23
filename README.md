@@ -39,6 +39,41 @@ compose.sh    <id>   →  out/<id>.race.mp4              (side-by-side; faster s
 prompt, tool calls revealed in order, answer, metrics ticker), scaled to the
 real duration so the composed race is honest.
 
+## Fair base steering (`claude-md/`)
+
+`claude-md/<repo>.base.md` is a realistic, grove-free contributor guide a
+maintainer would actually write for that project (layout, build/test,
+conventions). When present, `run-race.sh` injects it as the repo's `CLAUDE.md` on
+**both** sides before the run:
+
+- **db** gets the base only.
+- **dg** gets the base **plus** its baked `<!-- grove:start -->…<!-- grove:end -->`
+  block (what `grove init` wrote).
+
+So both sides share identical project guidance and **grove is the only
+variable** — instead of comparing "steered dg vs vanilla db". With no base file,
+behaviour is unchanged (db vanilla, dg grove-only). All ten repos have a base
+file under `claude-md/`.
+
+## Finding the prompt complexity where grove wins (`optimize-prompt.sh`)
+
+Grove's steering + tool-schema tax is ~fixed (~30k context); the baseline's cost
+grows with how much source it must read. So grove's *context* win appears only
+once a prompt forces broad reading. `optimize-prompt.sh` finds that threshold
+automatically:
+
+```bash
+scripts/optimize-prompt.sh redis --model sonnet            # walk the whole ladder
+scripts/optimize-prompt.sh redis --model sonnet --until-win  # stop at first grove win
+```
+
+It reads `scenes/<repo>.ladder.tsv` (`LABEL<TAB>PROMPT`, escalating reading
+breadth: single symbol → call sites → flow trace → subsystem summary →
+cross-cutting architecture), races **both sides** at each rung, extracts
+`context_tokens`, prints a live table, and writes `out/<repo>.optimize.json` with
+the first rung where `dg.context < db.context`. This is the self-evaluating loop:
+it *measures* the relative gain rather than asserting it.
+
 ## Quick start
 
 ```bash
