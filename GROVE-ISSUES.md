@@ -13,7 +13,21 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-1 — Off-by-one line numbers from `@row` symbol-ids
 
-- **Status:** **filed** — [grove#31](https://github.com/Entelligentsia/grove/issues/31) (confirmed, 6 repos)
+- **Status:** **FIXED — verified** ([grove#31](https://github.com/Entelligentsia/grove/issues/31))
+- **Tier-1 verification (no agent, no tokens):** same probe image (fixed grammars),
+  binary the only variable — pre-fix build `evidence/probes.buggy.json` = **0/9**
+  (every line −1); release build `evidence/probes.fixed.json` = **9/9** correct.
+- **Correction to the original report:** the bug was **uniform across ALL grammars**
+  at grove's raw output (binary-side), **not** grammar-clustered. The earlier
+  "right on rust/go/ts/cpp, wrong on python/js/java/ruby/php" pattern was an
+  **agent artifact** — for some languages the agent self-corrected by reading the
+  source, masking grove's −1; the raw `grove outline` was −1 on all 9. Isolation
+  proof: pre-fix binary + any grammars → −1; fixed binary + the *same old* grammars
+  → correct. The grove `CLAUDE.md` now documents "lines/cols 1-based across the
+  whole surface".
+- **Note for R2:** because the fix is binary-side and Tier-1 already confirms line
+  accuracy, the expensive agent R2 is **only** needed to measure the *bite* (does
+  the agent answer better), not to confirm the fix.
 - **Seen in:** redis (L4) + L1 single-symbol on **django, webpack, spring-boot,
   rails, laravel** — dg reported the definition exactly **−1** vs the true
   `grep -n` line (django 325 vs 326, webpack 174 vs 175, spring-boot 190 vs 191,
@@ -68,6 +82,25 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
   grove affordance for "summarize/outline a subsystem" that returns a compact map
   rather than many full bodies.
 - **Evidence:** `out/opt-redis-L5_arch.claude.dg.jsonl`, `out/redis.optimize.json`.
+
+## GI-4 — Definitions not tagged (outline gaps), found via Tier-1 probe
+
+- **Status:** draft (found while authoring `probes/line-accuracy.tsv`)
+- **Symptom:** `grove outline` omits some real definitions:
+  - **rust:** items inside a function-like macro block aren't tagged — e.g.
+    `tokio/src/task/spawn.rs` has `pub fn spawn` inside `cfg_rt! { … }`, and
+    `grove outline` on that file returns **nothing**.
+  - **typescript:** `export function createScanner` in `src/compiler/scanner.ts`
+    isn't tagged (the `interface Scanner` in the same file is).
+  - **cpp:** `class CTransaction` in `src/primitives/transaction.h` isn't tagged
+    (nearby `struct` definitions are).
+- **Impact:** go-to-def / outline silently miss symbols → agent falls back to grep
+  (or worse, confabulates, cf. GI-2). Quietly narrows grove's coverage.
+- **Next:** confirm per-grammar against pinned source, then file. Likely a
+  `tags.scm` coverage gap per language (macro bodies, `export function`, `class`
+  vs `struct`).
+- **Evidence:** `probes/line-accuracy.tsv` history (these symbols were swapped out
+  for tagged ones); reproduce with `grove outline <file>` in the probe image.
 
 ---
 

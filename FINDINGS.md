@@ -145,6 +145,15 @@ diff <(jq .summary evidence/L1.lines.r1.json) <(jq .summary evidence/L1.lines.r2
 Success = dg line accuracy 4/9 → **9/9**, `dg_off_by_one` empty. (Context/time
 deltas may also shift; re-aggregate with the same flow if needed.)
 
+**Update — #31 already verified fixed via Tier-1 probe (no agent, no tokens).**
+The fix is in the grove binary (host == `../grove/target/release/grove`, both
+"0.1.5" but the post-fix build). `scripts/run-probes.sh` on the same probe-image
+grammars, binary the only variable: pre-fix `evidence/probes.buggy.json` = **0/9**,
+fixed `evidence/probes.fixed.json` = **9/9**. The bug was **uniform across all
+grammars** (binary-side); the agent-level "clustering" in the L1 table was an
+agent self-correction artifact. So the agent R2 is now only about the *bite*
+(answer quality/context), not confirming the line fix.
+
 ## Remaining rungs (pending)
 
 Per the rung-by-rung-in-parallel plan, next: L2 across all 9, then L3, L4, L5.

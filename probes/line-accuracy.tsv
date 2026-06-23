@@ -1,0 +1,11 @@
+# line-accuracy probe (grove#31): grove definition must report the TRUE 1-based line.
+# columns: symbol<TAB>file(rel to /home/bench/repos)<TAB>grep -E pattern for the def
+Runtime	tokio/tokio/src/runtime/runtime.rs	pub struct Runtime
+Site	hugo/hugolib/site.go	^type Site struct
+QuerySet	django/django/db/models/query.py	^class QuerySet
+Scanner	typescript/src/compiler/scanner.ts	export interface Scanner
+Compiler	webpack/lib/Compiler.js	^class Compiler
+CMutableTransaction	bitcoin/src/primitives/transaction.h	^struct CMutableTransaction$
+SpringApplication	spring-boot/core/spring-boot/src/main/java/org/springframework/boot/SpringApplication.java	public class SpringApplication
+Relation	rails/activerecord/lib/active_record/relation.rb	class Relation
+Model	laravel/src/Illuminate/Database/Eloquent/Model.php	abstract class Model

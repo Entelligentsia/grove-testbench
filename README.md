@@ -48,6 +48,42 @@ compose.sh    <id>   →  out/<id>.race.mp4              (side-by-side; faster s
 prompt, tool calls revealed in order, answer, metrics ticker), scaled to the
 real duration so the composed race is honest.
 
+## Two-tier verification (cheap probes before expensive races)
+
+Most grove bugs are defects in grove's **raw output** (e.g. #31's off-by-one
+lines) and are testable **deterministically, with no agent and no tokens**. Only
+the "does an agent actually benefit?" question needs the LLM. So verification is
+two tiers:
+
+- **Tier 1 — probes (`scripts/run-probes.sh`)**: assert grove's CLI output against
+  the 10 testbench repos. No agent, no tokens, seconds, CI-friendly exit code.
+  Run on every grove build/fix.
+- **Tier 2 — agent race (`scripts/run-race.sh`)**: the headless LLM run. Expensive;
+  run only after Tier 1 passes, to measure the *bite* (context/time/quality).
+
+### The probe container
+
+```
+base0  ──(scripts/build-probe.sh)──▶  grove-testbench/probe  (base0 + baked grammars)
+```
+
+`probe` has the 10 repos + grammars but **no grove binary pinned** — the binary
+under test is **bind-mounted at runtime**, so iterating on a fix is just
+`cargo build` + `run-probes.sh`, with **no image rebuild**:
+
+```bash
+scripts/build-probe.sh                                   # once (grammars baked)
+GROVE_BIN=../grove/target/release/grove \
+  scripts/run-probes.sh --label fixed                    # verify a build, no tokens
+```
+
+Probes live in `probes/<name>.tsv`; the container-side check is
+`scripts/probe-inside.sh`; results are written to `evidence/probes.<label>.json`.
+The first probe, `probes/line-accuracy.tsv`, asserts `grove outline`'s reported
+line equals the real `grep -n` line for one definition per language (the #31
+regression). Worked example — pre-fix vs fixed binary, same grammars:
+`evidence/probes.buggy.json` (0/9) vs `evidence/probes.fixed.json` (9/9).
+
 ## Fair base steering (`claude-md/`)
 
 `claude-md/<repo>.base.md` is a realistic, grove-free contributor guide a

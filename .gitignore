@@ -1,8 +1,9 @@
 # run outputs / artifacts (regenerated; published per-run, not in the framework repo)
 out/
 
-# dg build context (host grove binary staged here)
+# dg / probe build contexts (host grove binary staged here)
 .dgctx/
+.probectx/
 grove
 
 # scratch
