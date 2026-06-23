@@ -13,7 +13,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-1 — Off-by-one line numbers from `@row` symbol-ids
 
-- **Status:** **confirmed** (6 repos)
+- **Status:** **filed** — [grove#31](https://github.com/Entelligentsia/grove/issues/31) (confirmed, 6 repos)
 - **Seen in:** redis (L4) + L1 single-symbol on **django, webpack, spring-boot,
   rails, laravel** — dg reported the definition exactly **−1** vs the true
   `grep -n` line (django 325 vs 326, webpack 174 vs 175, spring-boot 190 vs 191,
