@@ -66,7 +66,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-3 — Over-read blow-ups / non-convergence
 
-- **Status:** **confirmed** (multiple repos, even at L1)
+- **Status:** **confirmed** (multiple repos, even at L1) — **ready to file** → [`reports/draft-issues/GI-3-over-read-non-convergence.md`](reports/draft-issues/GI-3-over-read-non-convergence.md)
 - **Seen in:** redis (L5: dg 631,035 ctx / 29 tools vs db 1,541,835 / 47 tools — db delegated to a haiku `Explore` subagent that churned 1.49M) AND **L1
   single-symbol**: tokio dg 478,568 ctx (+215%), bitcoin dg 130,860 (+167%) /
   109s, typescript dg **321s** (vs db 8s), hugo +174%. On a *one-symbol* question
@@ -104,7 +104,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-5 — References/definitions resolve to generated declaration files
 
-- **Status:** draft (L2 quality eval, 2 repos)
+- **Status:** **confirmed** (L2 quality eval, 2 repos: typescript, webpack) — **ready to file** → [`reports/draft-issues/GI-5-generated-declaration-files.md`](reports/draft-issues/GI-5-generated-declaration-files.md)
 - **Seen in:** typescript (`Scanner`/`createScanner` refs landed in
   `tests/baselines/reference/api/typescript.d.ts`), webpack (`Compiler` refs in
   `types.d.ts`) — instead of the real `src/`/`lib/` source.
@@ -121,7 +121,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-6 — `callers` under-covers common symbols (low recall)
 
-- **Status:** draft (L2 quality eval, ≥3 repos)
+- **Status:** **confirmed** (L2 quality eval, ≥3 repos: spring-boot, hugo, django) — **ready to file** → [`reports/draft-issues/GI-6-callers-low-recall.md`](reports/draft-issues/GI-6-callers-low-recall.md)
 - **Seen in:** spring-boot (dg covered **<25%** of real `SpringApplication`
   references — only grove-tagged cross-refs), hugo & django (dg undercounted real
   references ~3×).
@@ -146,3 +146,14 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
    minimal repro (repo + pinned SHA + prompt), measured numbers, the offending
    stream-json excerpt, and the proposed fix.
 3. Link the filed issue back here (`Status: filed <url>`).
+
+### Ready to file now (post-L2, 2026-06-23)
+
+- **GI-3** (confirmed) — `reports/draft-issues/GI-3-over-read-non-convergence.md`
+- **GI-5** (confirmed, 2 repos) — `reports/draft-issues/GI-5-generated-declaration-files.md`
+- **GI-6** (confirmed, ≥3 repos) — `reports/draft-issues/GI-6-callers-low-recall.md`
+
+Each draft carries the pinned SHA, prompt, measured numbers, the offending
+transcript excerpt, and proposed fix — paste directly into a `Entelligentsia/grove`
+issue. GI-2 (redis only) and GI-4 (Tier-1 probe only) stay `draft` pending a 2nd
+repo / agent R2.
