@@ -13,17 +13,23 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-1 — Off-by-one line numbers from `@row` symbol-ids
 
-- **Status:** draft
-- **Seen in:** redis (L4 — systematic −1 across nearly every citation)
-- **Symptom:** When grove steers the agent, cited source locations are
-  consistently one line low (e.g. `lookupKey` cited at `db.c:278`, actually 279).
+- **Status:** **confirmed** (6 repos)
+- **Seen in:** redis (L4) + L1 single-symbol on **django, webpack, spring-boot,
+  rails, laravel** — dg reported the definition exactly **−1** vs the true
+  `grep -n` line (django 325 vs 326, webpack 174 vs 175, spring-boot 190 vs 191,
+  rails 4 vs 5, laravel 41 vs 42). db got all 9 right.
+- **Symptom:** grove-steered answers report source locations one line low.
 - **Hypothesis:** grove's `symbol-id` (`<lang>:<relpath>#<name>@<row>`) uses a
-  **0-indexed** row; consumers (and the agent) treat it as a 1-indexed line.
-- **Impact:** every grove-sourced citation is off by one → erodes the precise-
+  **0-indexed** row; consumers treat it as a 1-indexed line. **Clustering clue:**
+  dg was *correct* on tokio/hugo/typescript/bitcoin (rust/go/ts/cpp) and *wrong*
+  on python/js/java/ruby/php — suggests the off-by-one is **grammar/language
+  specific** (some grammars' node start-row already matches, others are −1), not a
+  global constant. Worth checking per-grammar row handling in the tags/query path.
+- **Impact:** every grove-sourced citation can be off by one → erodes the precise-
   navigation value that is grove's whole pitch; reviewers stop trusting cites.
-- **Proposed fix:** emit/display 1-indexed lines (or clearly label `@row` as
-  0-indexed and convert at the CLI/MCP boundary).
-- **Evidence to attach when filing:** `out/opt-redis-L4_subsystem.claude.dg.jsonl`.
+- **Proposed fix:** normalize to 1-indexed lines at the CLI/MCP boundary for ALL
+  grammars (add a per-grammar regression test asserting reported line == real line).
+- **Evidence:** `evidence/L1.eval.json`, `out/opt-{django,webpack,spring-boot,rails,laravel}-L1_symbol.claude.dg.jsonl`, `out/opt-redis-L4_subsystem.claude.dg.jsonl`.
 
 ## GI-2 — Thin slices cause confabulation (grounding gap)
 
@@ -44,13 +50,16 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 - **Evidence:** `out/opt-redis-L3_flow.claude.dg.jsonl`, `...L5_arch...dg.jsonl`
   + the blind-judge verdicts in [FINDINGS.md](FINDINGS.md).
 
-## GI-3 — Over-read blow-ups on broad/architecture prompts
+## GI-3 — Over-read blow-ups / non-convergence
 
-- **Status:** draft
-- **Seen in:** redis (L5 architecture: dg 630,475 ctx / 29 tools vs db 52,497 / 47
-  cheap greps)
-- **Symptom:** On broad questions, grove-driven navigation expands context far
-  beyond the baseline instead of converging.
+- **Status:** **confirmed** (multiple repos, even at L1)
+- **Seen in:** redis (L5: dg 630,475 ctx / 29 tools vs db 52,497) AND **L1
+  single-symbol**: tokio dg 478,568 ctx (+215%), bitcoin dg 130,860 (+167%) /
+  109s, typescript dg **321s** (vs db 8s), hugo +174%. On a *one-symbol* question
+  grove navigation ballooned context 2–3× and ran 10–40× longer.
+- **Symptom:** grove-driven navigation expands context/time far beyond the
+  baseline instead of converging — present even on trivial lookups, worst on
+  broad questions.
 - **Hypothesis:** no breadth budget / dedup; the agent fans out `symbols`+`source`
   across many candidates without pruning.
 - **Impact:** the context-savings story inverts exactly where big codebases need

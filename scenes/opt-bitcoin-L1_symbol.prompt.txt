@@ -1,0 +1,1 @@
+Where is the `CTransaction` class defined? Give the exact file and line.

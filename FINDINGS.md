@@ -82,16 +82,49 @@ Grove was **slower on every rung** and **lower-quality on every deep rung**. The
 
 ---
 
-## Remaining repos (pending)
+## L1 single-symbol — all 9 other repos (evaluated 2026-06-23, model sonnet)
 
-Run: `scripts/optimize-prompt.sh <repo> --model sonnet --keep`, then judge L3–L5.
+Rung run in parallel across repos (`scripts/run-rung-parallel.sh L1_symbol sonnet …`).
+Prompt class: "Where is the `<iconic symbol>` defined? Give the exact file and
+line." Quality is objective here (one fact), verified vs pinned source with
+`grep -n`. Evidence: `evidence/L1.eval.json`.
 
-- [ ] tokio (rust)
-- [ ] hugo (go)
-- [ ] django (python)
-- [ ] typescript (typescript)
-- [ ] webpack (javascript)
-- [ ] bitcoin (cpp)
-- [ ] spring-boot (java)
-- [ ] rails (ruby)
-- [ ] laravel (php)
+| Repo | db ctx | dg ctx | ctx Δ | ctx win | db t | dg t | time win | db line | dg line | true | quality |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| tokio | 152,106 | 478,568 | +215% | db | 18s | 68s | db | 174 ✓ | 174 ✓ | 174 | both right |
+| hugo | 48,722 | 133,584 | +174% | db | 5s | 24s | db | 103 ✓ | 103 ✓ | 103 | both right |
+| django | 73,638 | 80,376 | +9% | db | 7s | 17s | db | 326 ✓ | **325 ✗** | 326 | **dg off −1** |
+| typescript | 73,346 | 128,986 | +76% | db | 8s | **321s** | db | 1022 ✓ | 1022 ✓ | 1022 | both right |
+| webpack | 48,763 | 91,389 | +87% | db | 6s | 24s | db | 175 ✓ | **174 ✗** | 175 | **dg off −1** |
+| bitcoin | 48,951 | 130,860 | +167% | db | 5s | 109s | db | 280 ✓ | 280 ✓ | 280 | both right |
+| spring-boot | 73,785 | 81,359 | +10% | db | 8s | 28s | db | 191 ✓ | **190 ✗** | 191 | **dg off −1** |
+| rails | 48,719 | 78,852 | +62% | db | 5s | 22s | db | 5 ✓ | **4 ✗** | 5 | **dg off −1** |
+| laravel | 148,649 | 131,737 | **−11%** | **dg** | 22s | 27s | db | 42 ✓ | **41 ✗** | 42 | **dg off −1** |
+
+### Verdict (L1, cross-repo)
+
+On the trivial single-symbol lookup, **grove loses on every axis**:
+
+- **Context:** db wins **8/9** (often 2–3×: tokio +215%, hugo +174%, bitcoin
+  +167%). dg wins only laravel (−11%). The baseline just greps one symbol; grove's
+  steering + tool schema + over-reading dwarfs that.
+- **Time:** db wins **9/9**. Two grove pathologies: typescript **321s** (vs 8s)
+  and bitcoin **109s** (vs 5s) — grove navigation failed to converge on a
+  one-symbol question.
+- **Quality:** db **9/9 correct**; dg **4/9** — a systematic **−1 off-by-one**
+  on django, webpack, spring-boot, rails, laravel. Clustering is suggestive:
+  dg was correct on tokio/hugo/typescript/bitcoin (rust/go/ts/cpp) and off on the
+  python/js/java/ruby/php set — a likely **grammar-specific row-indexing** bug.
+
+This is a clean cross-language confirmation of redis L1/L2: grove is pure overhead
+for simple lookups, and the off-by-one (GI-1) reproduces across **5 more repos**.
+
+## Remaining rungs (pending)
+
+Per the rung-by-rung-in-parallel plan, next: L2 across all 9, then L3, L4, L5.
+
+- [x] L1 — single symbol (this section)
+- [ ] L2 — def + all call sites
+- [ ] L3 — flow trace
+- [ ] L4 — subsystem end-to-end
+- [ ] L5 — cross-cutting architecture

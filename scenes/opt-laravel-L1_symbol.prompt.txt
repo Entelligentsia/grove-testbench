@@ -1,0 +1,1 @@
+Where is the Eloquent `Model` class (Illuminate\\Database\\Eloquent\\Model) defined? Give the exact file and line.
