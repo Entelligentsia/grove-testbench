@@ -51,6 +51,11 @@ REPO_NAME="${REPO_NAME:-$REPO}"
 
 command -v jq >/dev/null || { echo "host dep missing: jq" >&2; exit 1; }
 MODEL_ARG=""; [[ -n "$MODEL" ]] && MODEL_ARG="--model $MODEL"
+# Auth: the db/dg images bake OAuth creds that EXPIRE (and the refresh token
+# rotates, which breaks isolated --rm containers — first refresh wins, rest 401).
+# Mount the host's live credentials read-only instead, so every container uses a
+# valid token and nothing depends on the stale baked copy. Override with CLAUDE_CREDS.
+CREDS="${CLAUDE_CREDS:-$HOME/.claude/.credentials.json}"
 # Same model + identical flags both sides; grove on/off is the only variable.
 CAP_ENV='LANG=C.UTF-8 LC_ALL=C.UTF-8'
 if [[ "$BACKEND" == docker ]]; then
@@ -72,6 +77,12 @@ mkdir -p "$OUT"
 CFG="$OUT/.cfg"; mkdir -p "$CFG"
 printf '{ "mcpServers": {} }\n' > "$CFG/empty-mcp.json"
 printf '{ "mcpServers": { "grove": { "command": "grove", "args": ["serve"] } } }\n' > "$CFG/grove-mcp.json"
+
+# Stage a world-readable copy of the live host creds (the container user `bench`,
+# uid 1001, can't read the host's 0600 file owned by uid 1000). Mounted read-only;
+# token is valid for the session so no refresh/rotation happens in-container.
+HAVE_CREDS=0
+if [[ -f "$CREDS" ]]; then install -m 0644 "$CREDS" "$CFG/creds.json" && HAVE_CREDS=1; fi
 
 # --- realistic base steering (fair baseline) -------------------------------
 # If claude-md/<repo>.base.md exists, BOTH sides get it as the repo's CLAUDE.md
@@ -104,6 +115,10 @@ capture_side() {
     local img; img=$([[ "$side" == dg ]] && echo "$DG_IMG" || echo "$DB_IMG")
     local crepo="/home/bench/repos/$REPO_NAME"
     local denv="-e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e COLORTERM=truecolor"
+    # live host creds over the image's expired baked ones (read-only; token is
+    # valid for the session so no in-container refresh/rotation is needed)
+    local credmount=""
+    [[ "$HAVE_CREDS" == 1 ]] && credmount="-v '$CFG/creds.json:/home/bench/.claude/.credentials.json:ro'"
     # inject the fair base steering, if provided: db gets base only; dg gets
     # base prepended to its baked grove block (both sides end up with the same
     # project guidance, dg additionally steered to grove).
@@ -115,7 +130,7 @@ capture_side() {
         inject="cp /cfg/base.md $crepo/CLAUDE.md; "
       fi
     fi
-    inner="docker run --rm $denv -e RACE_PROMPT -v '$CFG:/cfg:ro' '$img' bash -lc \"cd $crepo && ${inject}claude -p \\\"\\\$RACE_PROMPT\\\" --output-format stream-json --verbose --dangerously-skip-permissions $MODEL_ARG --strict-mcp-config --mcp-config /cfg/$cfgname\""
+    inner="docker run --rm $denv $credmount -e RACE_PROMPT -v '$CFG:/cfg:ro' '$img' bash -lc \"cd $crepo && ${inject}claude -p \\\"\\\$RACE_PROMPT\\\" --output-format stream-json --verbose --dangerously-skip-permissions $MODEL_ARG --strict-mcp-config --mcp-config /cfg/$cfgname\""
   fi
 
   echo ">> [$side] grove $grove_state — running (headless stream-json)"

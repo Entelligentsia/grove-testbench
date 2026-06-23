@@ -154,12 +154,59 @@ grammars** (binary-side); the agent-level "clustering" in the L1 table was an
 agent self-correction artifact. So the agent R2 is now only about the *bite*
 (answer quality/context), not confirming the line fix.
 
+## L2 def + call sites — all 10 repos (evaluated 2026-06-23, model sonnet, FIXED grove)
+
+First rung run with the post-#31 binary (dg rebuilt → `dg:r2`; `dg:r1` = pre-fix).
+Prompt class: "Where is `<symbol>` defined, and list every place it is referenced
+or called across the source tree, with file and line." Throttled to MAXP=4 (20
+concurrent containers OOM'd a 16 GB box — see Ops notes). Evidence:
+`evidence/L2.eval.json`.
+
+| Repo | db ctx | dg ctx | ctx Δ | ctx win | db→dg time | time win | db→dg tools | tool win |
+|---|---|---|---|---|---|---|---|---|
+| redis | 53,198 | 81,566 | +53% | db | 19→41s | db | 1→3 | db |
+| tokio | 51,188 | 127,490 | +149% | db | 126→79s | dg | 23→4 | dg |
+| hugo | 76,293 | 142,497 | +87% | db | 110→110s | ~tie | 23→8 | dg |
+| django | 84,808 | 120,692 | +42% | db | 86→218s | db | 14→15 | db |
+| typescript | 50,272 | 138,879 | +176% | db | 115→144s | db | 34→6 | dg |
+| webpack | 152,493 | 162,282 | +6% | db | 118→52s | dg | 23→5 | dg |
+| bitcoin | 52,505 | 183,458 | +249% | db | 138→201s | db | 9→6 | dg |
+| **spring-boot** | 127,046 | 110,651 | **−13%** | **dg** | 107→125s | db | 25→12 | dg |
+| rails | 79,234 | 120,717 | +52% | db | 50→176s | db | 3→10 | db |
+| laravel | 55,646 | 180,810 | +225% | db | 136→226s | db | 16→39 | db |
+
+### Verdict (L2, cross-repo)
+
+- **Context:** db wins **9/10** (grove 1.5–3.5× heavier on most). dg wins only
+  **spring-boot** (−13%). The call-sites task is grep-cheap for the baseline, so
+  grove's `callers` + steering overhead still costs more — same economics as L1,
+  and the #31 fix (a correctness fix) does not change token volume.
+- **Time:** db wins **8/10** (dg faster only on tokio, webpack).
+- **Tools:** dg wins **6/10** (fewer calls — `callers`/`definition` vs many greps;
+  e.g. typescript 34→6, tokio 23→4). The lone consistent grove advantage so far.
+- **Caveat:** n=1 per cell; large variance (laravel dg 39 tools / 226s is a GI-3
+  over-read blow-up). spring-boot's win needs reproduction before it means anything.
+
+Quality (blind-judged call-site completeness vs source) not yet run for L2 — the
+context story is already decisive (grove loses on cost), so quality is the open
+question: does grove's `callers` find call sites the grep baseline misses?
+
+## Ops notes (harness lessons from the L2 run)
+
+- **Auth:** the db/dg images bake OAuth creds that **expire** (access token ~hours)
+  and whose refresh token **rotates** — so isolated `--rm` containers can't share a
+  refresh (first wins, rest 401). Fix: `run-race.sh` now mounts the **host's live
+  creds** read-only (staged to mode 0644 because the container runs as `bench`
+  uid 1001 and can't read the host's 0600 file). Set `CLAUDE_CREDS` to override.
+  Occasional transient 401 on a single cell still happens — just re-run that cell.
+- **Concurrency:** 20 concurrent claude containers (~0.5 GB each) OOM'd a 16 GB
+  box and crashed the session. `run-rung-parallel.sh` now throttles to `MAXP`
+  (default 4) concurrent races. Keep it ≤ free_GB / 0.5.
+
 ## Remaining rungs (pending)
 
-Per the rung-by-rung-in-parallel plan, next: L2 across all 9, then L3, L4, L5.
-
-- [x] L1 — single symbol (this section)
-- [ ] L2 — def + all call sites
+- [x] L1 — single symbol
+- [x] L2 — def + all call sites (this section)
 - [ ] L3 — flow trace
 - [ ] L4 — subsystem end-to-end
 - [ ] L5 — cross-cutting architecture
