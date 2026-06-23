@@ -55,8 +55,8 @@ do_callersmin() {  # sym dir min
   printf '%s\t%s\t%s\t%s\t%s\n' "$repo" "$sym" ">= $min" "${count:-0}" "$verdict"
 }
 
-while IFS=$'\t' read -r f1 f2 f3 f4 _rest; do
-  [[ -z "${f1// }" || "${f1:0:1}" == "#" ]] && continue
+while IFS=$'\t' read -r f1 f2 f3 f4 _rest || [[ -n "${f1:-}" ]]; do
+  [[ -z "${f1:-}" || "${f1:0:1}" == "#" ]] && continue
   case "$f1" in
     line)       do_line "$f2" "$f3" "$f4" ;;
     nodecl)     do_nodecl "$f2" "$f3" "$f4" "$_rest" ;;

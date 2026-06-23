@@ -104,7 +104,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 
 ## GI-5 — References/definitions resolve to generated declaration files
 
-- **Status:** **filed** [#32](https://github.com/Entelligentsia/grove/issues/32) (confirmed; L2 quality eval, 2 repos: typescript, webpack) — draft: [`reports/draft-issues/GI-5-generated-declaration-files.md`](reports/draft-issues/GI-5-generated-declaration-files.md)
+- **Status:** **FIXED — verified** [#32](https://github.com/Entelligentsia/grove/issues/32) (grove `e47ae69` `fix(ops): skip generated .d.ts declaration files in directory walks`). Tier-1 probe `probes/generated-decls.tsv` now **PASS 2 · FAIL 0** (typescript `Scanner` includes `src/compiler/scanner.ts` and excludes `tests/baselines/.../typescript.d.ts`; webpack `Compiler` includes `lib/Compiler.js` and excludes `declarations/LoaderContext.d.ts`). Draft: [`reports/draft-issues/GI-5-generated-declaration-files.md`](reports/draft-issues/GI-5-generated-declaration-files.md)
 - **Seen in:** typescript (`Scanner`/`createScanner` refs landed in
   `tests/baselines/reference/api/typescript.d.ts`), webpack (`Compiler` refs in
   `types.d.ts`) — instead of the real `src/`/`lib/` source.
