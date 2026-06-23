@@ -1,0 +1,83 @@
+{
+  "repo": "redis",
+  "model": "sonnet",
+  "rungs": [
+    {
+      "label": "L1_symbol",
+      "prompt": "Where is the `dictAdd` function defined? Give the file and line.",
+      "ok": true,
+      "db_context": 72983,
+      "dg_context": 76666,
+      "delta_pct_context": 5.05,
+      "winner_context": "db",
+      "db_tool_calls": 2,
+      "dg_tool_calls": 2,
+      "winner_time": "db",
+      "delta_pct_time": 33.55,
+      "db_turns": 3,
+      "dg_turns": 3
+    },
+    {
+      "label": "L2_callsites",
+      "prompt": "Where is `dictAdd` defined, and list every call site across the source tree with file and line.",
+      "ok": true,
+      "db_context": 52072,
+      "dg_context": 81983,
+      "delta_pct_context": 57.44,
+      "winner_context": "db",
+      "db_tool_calls": 8,
+      "dg_tool_calls": 3,
+      "winner_time": "db",
+      "delta_pct_time": 0.38,
+      "db_turns": 2,
+      "dg_turns": 4
+    },
+    {
+      "label": "L3_flow",
+      "prompt": "Trace how a SET command is executed in Redis: name every function it passes through from the moment the command is dispatched to where the value is stored in the keyspace, in order.",
+      "ok": true,
+      "db_context": 454969,
+      "dg_context": 264857,
+      "delta_pct_context": -41.79,
+      "winner_context": "dg",
+      "db_tool_calls": 23,
+      "dg_tool_calls": 18,
+      "winner_time": "db",
+      "delta_pct_time": 19.54,
+      "db_turns": 24,
+      "dg_turns": 19
+    },
+    {
+      "label": "L4_subsystem",
+      "prompt": "Explain how Redis key expiration works end to end. Identify the functions that set a TTL, lazily expire a key on access, and actively expire keys in the cron, and describe how they call each other.",
+      "ok": true,
+      "db_context": 160350,
+      "dg_context": 288616,
+      "delta_pct_context": 79.99,
+      "winner_context": "db",
+      "db_tool_calls": 8,
+      "dg_tool_calls": 15,
+      "winner_time": "db",
+      "delta_pct_time": 81.51,
+      "db_turns": 9,
+      "dg_turns": 16
+    },
+    {
+      "label": "L5_arch",
+      "prompt": "Give an architectural overview of how a write command propagates from a master to its replicas in Redis: name every function involved on both the master side (command propagation, replication backlog, feeding replicas) and the replica side (receiving and applying the stream), and how they connect.",
+      "ok": true,
+      "db_context": 52497,
+      "dg_context": 630475,
+      "delta_pct_context": 1100.97,
+      "winner_context": "db",
+      "db_tool_calls": 47,
+      "dg_tool_calls": 29,
+      "winner_time": "db",
+      "delta_pct_time": 0.89,
+      "db_turns": 2,
+      "dg_turns": 30
+    }
+  ],
+  "first_grove_context_win": "L3_flow",
+  "any_grove_context_win": true
+}

@@ -1,15 +1,24 @@
 # grove-testbench
 
-A reproducible harness that races a coding agent **with grove** against the
-**same agent without grove**, on the **same prompt**, across 10 large popular
-codebases — and renders a side-by-side video of each race.
+**An evaluation harness for grove on real-world code.** It runs the *same* coding
+agent (Claude) on the *same* prompt with grove off (`db`) and grove on (`dg`),
+across 10 large popular codebases, and measures grove's actual impact on four
+axes — **context tokens, wall-clock time, turns, and answer quality** — so we
+learn where grove genuinely helps and where it regresses.
 
-Same agent both sides (Claude-vs-Claude). Grove is the only variable. The race
-is run **headless** (`claude -p --output-format stream-json`) — reliable, no TUI
-startup gates — and the visual is **synthesized** from that stream-json into a
-clean, branded terminal animation timed to the real run duration.
+> **Purpose (redefined).** This is not a "grove wins" highlight reel. It is a
+> benchmark whose primary output is **evidence**: per-repo measurements plus
+> blind-judged answer-quality verdicts, verified against the pinned source. The
+> findings feed a structured backlog of fixes for the grove repo
+> ([GROVE-ISSUES.md](GROVE-ISSUES.md)). Any side-by-side video is a *secondary*
+> artifact, produced only for cases the data actually supports.
 
-> The original vision and locked decisions live in [PLAN.md](PLAN.md).
+Same agent both sides (Claude-vs-Claude). Grove is the only variable. Each run is
+**headless** (`claude -p --output-format stream-json`) — reliable, no TUI startup
+gates — and that stream-json is the source for both metrics and (optionally) a
+synthesized visual.
+
+> Live findings: [FINDINGS.md](FINDINGS.md). Original vision: [PLAN.md](PLAN.md).
 
 ## Image lineage (built locally; db/dg never published — they hold creds)
 

@@ -1,9 +1,15 @@
 # grove-testbench — Plan (finalized)
 
-> **Implementation note (locked):** the decisions in this doc still hold, but the
-> *capture* approach evolved. Live-TUI/tmux capture was superseded — the working
-> pipeline runs **headless** (`claude -p` stream-json) and **synthesizes** the
-> visual from that. See [README.md](README.md) for the actual pipeline.
+> **Purpose redefined (2026-06-23):** the testbench is now an **evaluation harness
+> for grove on real-world code**, not a "grove wins" video project. Its output is
+> evidence — per-repo context/time/turns + blind-judged answer quality — feeding a
+> structured grove fix backlog ([GROVE-ISSUES.md](GROVE-ISSUES.md)). Findings live
+> in [FINDINGS.md](FINDINGS.md). The mechanics below (image lineage, ladder,
+> metrics) still hold; any video is now a secondary artifact for data-supported wins.
+>
+> **Implementation note (locked):** the *capture* approach evolved. Live-TUI/tmux
+> capture was superseded — the pipeline runs **headless** (`claude -p` stream-json)
+> and **synthesizes** the visual from that. See [README.md](README.md).
 
 A reproducible, publishable harness that races a coding agent **with grove**
 against the **same agent without grove**, on the same prompt, over 10 large
