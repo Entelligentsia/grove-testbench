@@ -156,6 +156,8 @@ agent self-correction artifact. So the agent R2 is now only about the *bite*
 
 ## L2 def + call sites — all 10 repos (evaluated 2026-06-23, model sonnet, FIXED grove)
 
+> Full standalone write-up: [reports/L2-callsites.md](reports/L2-callsites.md).
+
 First rung run with the post-#31 binary (dg rebuilt → `dg:r2`; `dg:r1` = pre-fix).
 Prompt class: "Where is `<symbol>` defined, and list every place it is referenced
 or called across the source tree, with file and line." Throttled to MAXP=4 (20
