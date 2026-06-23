@@ -29,16 +29,18 @@ once all repos are evaluated.
 
 | Rung | Prompt class | db ctx | dg ctx | Δ | ctx winner |
 |---|---|---|---|---|---|
-| L1 | single symbol def | 72,983 | 76,666 | +5% | db |
-| L2 | def + all call sites | 52,072 | 81,983 | +57% | db |
-| **L3** | **flow trace (dispatch→keyspace)** | **454,969** | **264,857** | **−42%** | **dg** |
-| L4 | subsystem end-to-end | 160,350 | 288,616 | +80% | db |
-| L5 | cross-cutting architecture | 52,497 | 630,475 | +1101% | db |
+| L1 | single symbol def | 73,499 | 77,182 | +5% | db |
+| L2 | def + all call sites | 53,725 | 82,093 | +53% | db |
+| **L3** | **flow trace (dispatch→keyspace)** | **455,508** | **265,396** | **−42%** | **dg** |
+| L4 | subsystem end-to-end | 160,897 | 289,163 | +80% | db |
+| **L5** | **cross-cutting architecture** | **1,541,835** | **631,035** | **−59%** | **dg** |
 
-Grove's context win is **prompt-class-specific, not complexity-monotonic**: it
-appears only on the L3 *flow-trace* shape (which forces the baseline to read whole
-files chasing a call chain), and reverses on L1/L2 (cheap grep) and L4/L5 (where
-`dg` over-read — L5 ballooned to 630k).
+Grove's context wins are **prompt-class-specific, not complexity-monotonic**:
+L3 (flow trace — forces the baseline to read whole files chasing a call chain) and
+L5 (architecture — the baseline delegates to a haiku `Explore` subagent that
+churns 1.49M tokens, dwarfing grove's own over-read). It loses L1/L2 (cheap grep)
+and L4. L5's "win" is hollow: dg's own 631k is a GI-3 over-read — it only beats db
+because db was worse (1.54M via subagent), not because dg was efficient.
 
 ### Time & turns (lower = better)
 
@@ -51,7 +53,9 @@ files chasing a call chain), and reverses on L1/L2 (cheap grep) and L4/L5 (where
 | L5 | 181s | 182s | db | 2* | 30 | db |
 
 **Baseline wins wall-clock on every rung**, including L3. Grove wins turns only at
-L3. (*L5 db's 2 turns / 47 tools is a metric quirk — many cheap greps batched.)
+L3. (*L5 db's 2 turns / 47 tools = 1 parent `Agent` call delegating to a haiku
+`Explore` subagent that ran 46 greps; the subagent's turns aren't in `num_turns`,
+but its 1.49M context is counted in the ctx column above.)
 
 ### Answer quality (blind judges; A=db, B=dg; verified vs pinned source)
 
@@ -63,10 +67,13 @@ L3. (*L5 db's 2 turns / 47 tools is a metric quirk — many cheap greps batched.
 
 ### Verdict (redis)
 
-Grove's **only** measurable win is context tokens on the L3 flow-trace class
-(−42%) — and that same rung produced grove's **worst, partly-fabricated** answer.
-Grove was **slower on every rung** and **lower-quality on every deep rung**. The
-"grove wins" premise does **not** hold on redis as configured.
+Grove's measurable context wins are L3 (−42%) and L5 (−59%) — and both winning
+rungs produced grove's **worst** answers: L3 fabricated `db->dict`/
+`dbAddByLink→dictAdd`, L5 fabricated `handleClientsWithPendingWritesUsingThreads`.
+The L5 context win is hollow — dg's own 631k is a GI-3 over-read; it only beats db
+because db delegated 1.49M to a subagent. Grove was **slower on every rung** and
+**lower-quality on every deep rung**. The "grove wins" premise does **not** hold on
+redis as configured.
 
 ### Grove issues surfaced → [GROVE-ISSUES.md](GROVE-ISSUES.md)
 
@@ -77,8 +84,9 @@ Grove was **slower on every rung** and **lower-quality on every deep rung**. The
   (`db->dict`, `dictAdd`, `handleClientsWithPendingWritesUsingThreads`); the
   whole-file baseline stayed correct. Core tension: fewer tokens, weaker grounding.
 - **GI-3 over-read blow-ups** — on broad prompts (L5) grove usage ballooned to
-  630k context (29 tool calls), far above the baseline's 52k. Structural
-  navigation is not converging on broad/architecture questions.
+  631k context (29 tool calls). (The baseline was worse: db delegated to a haiku
+  subagent that churned 1.49M — so grove won L5 context only by comparison, not on
+  merit.) Structural navigation is not converging on broad/architecture questions.
 
 ---
 

@@ -67,7 +67,7 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 ## GI-3 — Over-read blow-ups / non-convergence
 
 - **Status:** **confirmed** (multiple repos, even at L1)
-- **Seen in:** redis (L5: dg 630,475 ctx / 29 tools vs db 52,497) AND **L1
+- **Seen in:** redis (L5: dg 631,035 ctx / 29 tools vs db 1,541,835 / 47 tools — db delegated to a haiku `Explore` subagent that churned 1.49M) AND **L1
   single-symbol**: tokio dg 478,568 ctx (+215%), bitcoin dg 130,860 (+167%) /
   109s, typescript dg **321s** (vs db 8s), hugo +174%. On a *one-symbol* question
   grove navigation ballooned context 2–3× and ran 10–40× longer.
