@@ -162,27 +162,30 @@ First rung run with the post-#31 binary (dg rebuilt → `dg:r2`; `dg:r1` = pre-f
 Prompt class: "Where is `<symbol>` defined, and list every place it is referenced
 or called across the source tree, with file and line." Throttled to MAXP=4 (20
 concurrent containers OOM'd a 16 GB box — see Ops notes). Evidence:
-`evidence/L2.eval.json`.
+`evidence/L2.eval.json`. Context is summed across all models the agent system uses
+(orchestrator + any `Task`/`Explore` subagent), so delegating greps to a subagent
+is not free.
 
 | Repo | db ctx | dg ctx | ctx Δ | ctx win | db→dg time | time win | db→dg tools | tool win |
 |---|---|---|---|---|---|---|---|---|
-| redis | 53,198 | 81,566 | +53% | db | 19→41s | db | 1→3 | db |
-| tokio | 51,188 | 127,490 | +149% | db | 126→79s | dg | 23→4 | dg |
-| hugo | 76,293 | 142,497 | +87% | db | 110→110s | ~tie | 23→8 | dg |
-| django | 84,808 | 120,692 | +42% | db | 86→218s | db | 14→15 | db |
-| typescript | 50,272 | 138,879 | +176% | db | 115→144s | db | 34→6 | dg |
-| webpack | 152,493 | 162,282 | +6% | db | 118→52s | dg | 23→5 | dg |
-| bitcoin | 52,505 | 183,458 | +249% | db | 138→201s | db | 9→6 | dg |
-| **spring-boot** | 127,046 | 110,651 | **−13%** | **dg** | 107→125s | db | 25→12 | dg |
-| rails | 79,234 | 120,717 | +52% | db | 50→176s | db | 3→10 | db |
-| laravel | 55,646 | 180,810 | +225% | db | 136→226s | db | 16→39 | db |
+| redis | 53,725 | 82,093 | +53% | db | 19→41s | db | 1→3 | db |
+| tokio | 539,234 | 128,016 | −76% | dg | 126→79s | dg | 23→4 | dg |
+| hugo | 513,389 | 185,590 | −64% | dg | 110→110s | tie | 23→8 | dg |
+| django | 269,980 | 275,357 | +2% | db | 86→218s | db | 14→15 | db |
+| typescript | 659,726 | 139,405 | −79% | dg | 115→144s | db | 34→6 | dg |
+| webpack | 422,259 | 162,809 | −61% | dg | 118→52s | dg | 23→5 | dg |
+| bitcoin | 187,573 | 183,986 | −2% | dg | 138→201s | db | 9→6 | dg |
+| **spring-boot** | 776,458 | 196,539 | −75% | **dg** | 107→125s | db | 25→12 | dg |
+| rails | 79,764 | 185,486 | +133% | db | 50→176s | db | 3→10 | db |
+| laravel | 422,842 | 486,001 | +15% | db | 136→226s | db | 16→39 | db |
 
 ### Verdict (L2, cross-repo)
 
-- **Context:** db wins **9/10** (grove 1.5–3.5× heavier on most). dg wins only
-  **spring-boot** (−13%). The call-sites task is grep-cheap for the baseline, so
-  grove's `callers` + steering overhead still costs more — same economics as L1,
-  and the #31 fix (a correctness fix) does not change token volume.
+- **Context:** **dg wins 6/10**. On the broad-search repos db delegates to a haiku
+  `Explore` subagent whose grep churn (135k–649k per repo) dwarfs grove's top-level
+  structural results, so grove is 2–5× cheaper there (tokio 539k→128k, typescript
+  660k→139k, webpack 422k→163k). db only wins where it didn't delegate (redis, rails)
+  or where dg also over-delegated and over-read (django tie, laravel GI-3).
 - **Time:** db wins **8/10** (dg faster only on tokio, webpack).
 - **Tools:** dg wins **6/10** (fewer calls — `callers`/`definition` vs many greps;
   e.g. typescript 34→6, tokio 23→4). The lone consistent grove advantage so far.
@@ -212,9 +215,12 @@ Blind A=db / B=dg. **5–5 split**, but the *kind* of win differs by side:
   its cheaper run was cheaper because it did **less** (covered <25% of call sites). So
   that lone context win is not a real win.
 
-**Net L2 (all axes, fixed grove):** grove loses context 9/10, loses time 8/10, wins
-tool-calls 6/10, ties quality 5/5. For "list all call sites", grove buys fewer tool
-calls and better precision at the cost of more tokens/time and uneven recall.
+**Net L2 (all axes, fixed grove):** grove **wins context 6/10** (all models incl.
+subagents), loses time 8/10, wins tool-calls 6/10, ties quality 5/5. The real
+blockers are GI-5/GI-6 recall, and several of dg's context wins are cheap because
+recall was low ("did less"). For "list all call sites", grove buys fewer tool calls,
+less context, and better precision — uneven recall is what still costs it quality
+wins. See [`reports/L2-callsites.md`](reports/L2-callsites.md).
 
 ## Ops notes (harness lessons from the L2 run)
 

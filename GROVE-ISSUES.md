@@ -129,8 +129,9 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
   query captured (direct, name-resolved defs/calls), missing the long tail of real
   textual references a `grep -rn` finds. Precision is high but recall is low.
 - **Impact:** on broad "find all uses" tasks grove looks complete but silently
-  omits most sites — and its cheaper context is partly *because* it read less
-  (cf. spring-boot L2: dg won context −13% while covering <25%).
+  omits most sites — and its lower context is partly *because* it read less
+  (cf. spring-boot L2: dg covered <25%; hugo/typescript/webpack dg context wins
+  also coincide with low recall, i.e. "did less").
 - **Proposed fix:** document `callers` as precision-first (resolved call sites),
   and/or offer a recall mode (textual + structural union); have steering tell the
   agent to fall back to `grep` for exhaustive "every reference" asks.
