@@ -187,9 +187,32 @@ concurrent containers OOM'd a 16 GB box — see Ops notes). Evidence:
 - **Caveat:** n=1 per cell; large variance (laravel dg 39 tools / 226s is a GI-3
   over-read blow-up). spring-boot's win needs reproduction before it means anything.
 
-Quality (blind-judged call-site completeness vs source) not yet run for L2 — the
-context story is already decisive (grove loses on cost), so quality is the open
-question: does grove's `callers` find call sites the grep baseline misses?
+### L2 quality (blind judges, claims verified vs pinned source) — `evidence/L2.quality.json`
+
+Blind A=db / B=dg. **5–5 split**, but the *kind* of win differs by side:
+
+| grove (dg) won | baseline (db) won |
+|---|---|
+| redis, tokio, bitcoin, rails, laravel | hugo, django, typescript, webpack, spring-boot |
+
+- **Where grove wins it's on precision + non-obvious references:** it found real call
+  sites grep-style answers missed — redis's vendored `deps/hiredis` copy, rails bare-
+  `Relation` subclasses/factory calls, bitcoin `interfaces/wallet.h`, plus enclosing
+  function names; and it fabricated less (tokio: the baseline invented "50+ call
+  sites", real 18; grove gave verified lines).
+- **Where grove loses it's on recall / wrong target:**
+  - **points at generated declaration files** instead of source — typescript refs
+    landed in `tests/baselines/**/*.d.ts`, webpack in `types.d.ts`, dropping the real
+    `lib/`/`src/` call sites. → **GI-5**.
+  - **`callers` under-covers common symbols** — spring-boot dg covered <25% of real
+    references (only grove-tagged cross-refs); hugo/django dg undercounted ~3×. → **GI-6**.
+- **The spring-boot irony:** dg "won" L2 *context* (−13%) **and** lost quality there —
+  its cheaper run was cheaper because it did **less** (covered <25% of call sites). So
+  that lone context win is not a real win.
+
+**Net L2 (all axes, fixed grove):** grove loses context 9/10, loses time 8/10, wins
+tool-calls 6/10, ties quality 5/5. For "list all call sites", grove buys fewer tool
+calls and better precision at the cost of more tokens/time and uneven recall.
 
 ## Ops notes (harness lessons from the L2 run)
 

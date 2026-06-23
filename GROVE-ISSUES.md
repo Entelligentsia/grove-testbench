@@ -102,6 +102,40 @@ Status legend: `draft` (seen once) · `confirmed` (seen in ≥2 repos or reprodu
 - **Evidence:** `probes/line-accuracy.tsv` history (these symbols were swapped out
   for tagged ones); reproduce with `grove outline <file>` in the probe image.
 
+## GI-5 — References/definitions resolve to generated declaration files
+
+- **Status:** draft (L2 quality eval, 2 repos)
+- **Seen in:** typescript (`Scanner`/`createScanner` refs landed in
+  `tests/baselines/reference/api/typescript.d.ts`), webpack (`Compiler` refs in
+  `types.d.ts`) — instead of the real `src/`/`lib/` source.
+- **Symptom:** grove indexes generated `.d.ts` / declaration artifacts as if they
+  were source, so `definition`/`callers` point the agent at machine-generated decls
+  and miss the actual implementation + call sites.
+- **Impact:** the agent answers from the wrong file; real call sites are dropped
+  (major recall loss on L2).
+- **Proposed fix:** ignore/deprioritize generated declaration files (`*.d.ts`
+  baselines, `types.d.ts`) in indexing, or rank real source above declarations;
+  consider a default ignore set akin to `.gitignore`/build outputs.
+- **Evidence:** `out/opt-typescript-L2_callsites.claude.dg.jsonl`,
+  `out/opt-webpack-L2_callsites.claude.dg.jsonl`, `evidence/L2.quality.json`.
+
+## GI-6 — `callers` under-covers common symbols (low recall)
+
+- **Status:** draft (L2 quality eval, ≥3 repos)
+- **Seen in:** spring-boot (dg covered **<25%** of real `SpringApplication`
+  references — only grove-tagged cross-refs), hugo & django (dg undercounted real
+  references ~3×).
+- **Symptom:** for "list every call site", grove returns only the symbols its tags
+  query captured (direct, name-resolved defs/calls), missing the long tail of real
+  textual references a `grep -rn` finds. Precision is high but recall is low.
+- **Impact:** on broad "find all uses" tasks grove looks complete but silently
+  omits most sites — and its cheaper context is partly *because* it read less
+  (cf. spring-boot L2: dg won context −13% while covering <25%).
+- **Proposed fix:** document `callers` as precision-first (resolved call sites),
+  and/or offer a recall mode (textual + structural union); have steering tell the
+  agent to fall back to `grep` for exhaustive "every reference" asks.
+- **Evidence:** `out/opt-spring-boot-L2_callsites.claude.dg.jsonl`, `evidence/L2.quality.json`.
+
 ---
 
 ## Filing checklist (after all repos)

@@ -1,0 +1,76 @@
+{
+  "rung": "L2_callsites",
+  "model": "sonnet",
+  "grove": "fixed (post-#31)",
+  "method": "blind judge, claims verified vs pinned dg:r2 source",
+  "quality": [
+    {
+      "repo": "redis",
+      "quality_winner": "dg",
+      "note": "dg strict superset: found vendored deps/hiredis call site + enclosing fn names; both 6/6 precision"
+    },
+    {
+      "repo": "tokio",
+      "quality_winner": "dg",
+      "note": "db FABRICATED aggregate counts ('50+', real 18); dg gave real verified file:line refs, better recall"
+    },
+    {
+      "repo": "hugo",
+      "quality_winner": "db",
+      "note": "both 6/6 precision; db covered all 4 Site def variants + accurate ~497 count; dg undercounted 3x, missed variants"
+    },
+    {
+      "repo": "django",
+      "quality_winner": "db",
+      "note": "dg fabricated query.py:304 (PreventQuerySetCloning, not QuerySet), undercovered django/ source, buried in tests"
+    },
+    {
+      "repo": "typescript",
+      "quality_winner": "db",
+      "note": "dg radically incomplete: missed checker/parser/nodeFactory createScanner call sites; only 3 src refs"
+    },
+    {
+      "repo": "webpack",
+      "quality_winner": "db",
+      "note": "dg substituted generated types.d.ts for real lib/ recall, silently dropped ~199 lib/ typedef refs"
+    },
+    {
+      "repo": "bitcoin",
+      "quality_winner": "dg",
+      "note": "dg higher recall (132 vs ~115 files), caught interfaces/wallet.h etc db missed, fewer wrong lines"
+    },
+    {
+      "repo": "spring-boot",
+      "quality_winner": "db",
+      "note": "dg precision-perfect but covered <25% of refs (only grove-tagged cross-refs); db broad categorical coverage"
+    },
+    {
+      "repo": "rails",
+      "quality_winner": "dg",
+      "note": "dg found bare-Relation refs db missed (subclasses, factory calls, constants); db stuck to literal ActiveRecord::Relation"
+    },
+    {
+      "repo": "laravel",
+      "quality_winner": "dg",
+      "note": "dg zero fabrications + unique real refs (Facade alias, DB provider injection); db had a fabricated static-call column"
+    }
+  ],
+  "summary": {
+    "dg_quality_wins": 5,
+    "db_quality_wins": 5,
+    "dg_won": [
+      "redis",
+      "tokio",
+      "bitcoin",
+      "rails",
+      "laravel"
+    ],
+    "db_won": [
+      "hugo",
+      "django",
+      "typescript",
+      "webpack",
+      "spring-boot"
+    ]
+  }
+}
