@@ -20,6 +20,15 @@ synthesized visual.
 
 > Live findings: [FINDINGS.md](FINDINGS.md). Original vision: [PLAN.md](PLAN.md).
 
+> **Single source of truth.** This harness supersedes the earlier `grove-test`
+> bed (a single pinned ripgrep clone used for manual MCP poking). Both the
+> deterministic regression checks *and* the agent evals now live here, over the
+> 10 pinned repos in [`repos.manifest`](repos.manifest), with results committed
+> under [`evidence/`](evidence) and [`reports/`](reports) as the definitive data
+> for any future research write-up. The Rust def-count anchor that ripgrep used
+> to provide (3317 defs) now rides on tokio via
+> [`probes/def-count.tsv`](probes/def-count.tsv).
+
 ## Image lineage (built locally; baseline/grove never published — they hold creds)
 
 ```
@@ -83,6 +92,11 @@ The first probe, `probes/line-accuracy.tsv`, asserts `grove outline`'s reported
 line equals the real `grep -n` line for one definition per language (the #31
 regression). Worked example — pre-fix vs fixed binary, same grammars:
 `evidence/probes.buggy.json` (0/9) vs `evidence/probes.fixed.json` (9/9).
+
+Other specs: `generated-decls.tsv` (GI-5), `callers-recall.tsv` (GI-6),
+`map-graph.tsv` (GI-3/#34), and `def-count.tsv` — the Rust def-count regression
+anchor inherited from the retired grove-test bed, asserting `grove symbols`
+returns a stable definition total for tokio (lock its exact count after a run).
 
 ## Fair base steering (`claude-md/`)
 

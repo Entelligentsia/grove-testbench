@@ -13,10 +13,16 @@
 #               grove map <dir> --json must return a multi-file definition graph
 #               with >= min-entries definitions, >= min-edges outgoing reference
 #               edges, and NO `source` bodies (the anti-over-read guarantee).
+#   defcount    dir<TAB>min<TAB>exact   (Rust def-count regression anchor)
+#               grove symbols <dir> --json must report >= min definitions, and
+#               == exact when exact is a number. This is the def-count anchor the
+#               retired ../grove-test bed used to give on ripgrep (3317 defs); it
+#               now rides on tokio inside this single harness. Leave exact as `?`
+#               (floor-only gate) until you lock it to the count the first run prints.
 #
-# Rows whose first column is not one of {line,nodecl,callersmin} are treated as a
-# legacy `line` probe (symbol=col1, file=col2, pat=col3) so the original
-# probes/line-accuracy.tsv keeps working unchanged.
+# Rows whose first column is not one of {line,nodecl,callersmin,mapgraph,defcount}
+# are treated as a legacy `line` probe (symbol=col1, file=col2, pat=col3) so the
+# original probes/line-accuracy.tsv keeps working unchanged.
 #
 # Emits one TSV row to stdout:  repo<TAB>symbol<TAB>truth<TAB>got<TAB>PASS|FAIL
 set -uo pipefail
@@ -75,6 +81,23 @@ do_callersmin() {  # sym dir min
   printf '%s\t%s\t%s\t%s\t%s\n' "$repo" "$sym" ">= $min" "${count:-0}" "$verdict"
 }
 
+do_defcount() {  # dir min exact
+  local dir="$1" min="$2" exact="${3:-?}"
+  local repo; repo="$(echo "$dir" | sed 's#.*/repos/\([^/]*\).*#\1#')"
+  [[ "$repo" == "$dir" ]] && repo="$(basename "$dir")"
+  local out count verdict=FAIL truth
+  out="$(grove symbols "$dir" --json 2>/dev/null || true)"
+  count="$(jq 'if type=="array" then length elif (.results|type)=="array" then (.results|length) else 0 end' <<<"$out" 2>/dev/null || echo 0)"
+  if [[ "$exact" =~ ^[0-9]+$ ]]; then
+    truth="== $exact"
+    [[ "${count:-0}" -eq "$exact" ]] && verdict=PASS
+  else
+    truth=">= $min (lock exact)"
+    [[ "${count:-0}" -ge "$min" ]] && verdict=PASS
+  fi
+  printf '%s\t%s\t%s\t%s\t%s\n' "$repo" "defcount:$(basename "$dir")" "$truth" "${count:-0}" "$verdict"
+}
+
 while IFS=$'\t' read -r f1 f2 f3 f4 _rest || [[ -n "${f1:-}" ]]; do
   [[ -z "${f1:-}" || "${f1:0:1}" == "#" ]] && continue
   case "$f1" in
@@ -82,6 +105,7 @@ while IFS=$'\t' read -r f1 f2 f3 f4 _rest || [[ -n "${f1:-}" ]]; do
     nodecl)     do_nodecl "$f2" "$f3" "$f4" "$_rest" ;;
     callersmin) do_callersmin "$f2" "$f3" "$f4" ;;
     mapgraph)   do_mapgraph "$f2" "$f3" "$f4" ;;
+    defcount)   do_defcount "$f2" "$f3" "$f4" ;;
     *)          do_line "$f1" "$f2" "$f3" ;;   # legacy line-accuracy rows
   esac
 done < "$spec"
