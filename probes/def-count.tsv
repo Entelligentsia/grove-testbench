@@ -1,0 +1,13 @@
+# def-count probe (Rust regression anchor): grove `symbols <dir> --json` must
+# report a stable total definition count for a known Rust tree. This is the role
+# the retired ../grove-test bed used to play -- ripgrep yielding **3317 defs** as
+# a hand-checked regression anchor. That bed is gone; the anchor now rides on
+# tokio (this harness's pinned Rust repo) so test + eval + data live in one place.
+#
+# kind<TAB>dir(absolute, inside container)<TAB>min<TAB>exact
+#   min   = conservative floor: a large async runtime has well over this many defs.
+#   exact = `?` until locked. Run `scripts/run-probes.sh` once against the pinned
+#           image; it prints the observed count in the `got` column. Replace `?`
+#           with that number to turn this floor into a precise +/-0 anchor (a
+#           grammar/parser regression then flips it FAIL).
+defcount	/home/bench/repos/tokio/tokio/src	100	?
