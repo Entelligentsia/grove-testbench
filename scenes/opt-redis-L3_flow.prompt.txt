@@ -1,0 +1,1 @@
+Trace how a SET command is executed in Redis: name every function it passes through from the moment the command is dispatched to where the value is stored in the keyspace, in order.

@@ -1,0 +1,28 @@
+{
+  "rung": "L3_flow",
+  "date": "2026-06-26",
+  "grove_version": "0.1.8",
+  "model": "sonnet",
+  "cutoff_bytes": 1500000,
+  "repos": {
+"redis":{"baseline_killed":false,"baseline":{"context":1163369,"time_s":154.2,"reads":20,"turns":12,"tool_calls":27,"delegated":true},"grove":{"context":490514,"time_s":140.9,"reads":0,"grove_tools":23,"turns":25,"tool_calls":24,"delegated":false},"winner_context":"grove","delta_ctx_pct":-57.84}
+,
+"bitcoin":{"baseline_killed":true,"baseline":{"context":0,"time_s":0,"reads":106,"turns":0,"tool_calls":133,"delegated":true},"grove":{"context":537851,"time_s":380.4,"reads":1,"grove_tools":26,"turns":29,"tool_calls":28,"delegated":false},"winner_context":"grove-only","delta_ctx_pct":null}
+,
+"django":{"baseline_killed":false,"baseline":{"context":327990,"time_s":99.4,"reads":12,"turns":9,"tool_calls":16,"delegated":true},"grove":{"context":437898,"time_s":78.3,"reads":0,"grove_tools":15,"turns":17,"tool_calls":16,"delegated":false},"winner_context":"baseline","delta_ctx_pct":33.51}
+,
+"tokio":{"baseline_killed":false,"baseline":{"context":2153015,"time_s":259.9,"reads":47,"turns":16,"tool_calls":54,"delegated":true},"grove":{"context":1887238,"time_s":273.3,"reads":6,"grove_tools":52,"turns":63,"tool_calls":62,"delegated":false},"winner_context":"grove","delta_ctx_pct":-12.34}
+,
+"hugo":{"baseline_killed":true,"baseline":{"context":0,"time_s":0,"reads":222,"turns":0,"tool_calls":256,"delegated":true},"grove":{"context":1874769,"time_s":275.4,"reads":0,"grove_tools":75,"turns":77,"tool_calls":76,"delegated":false},"winner_context":"grove-only","delta_ctx_pct":null}
+,
+"typescript":{"baseline_killed":true,"baseline":{"context":0,"time_s":0,"reads":149,"turns":0,"tool_calls":189,"delegated":true},"grove":{"context":2152368,"time_s":564.1,"reads":29,"grove_tools":18,"turns":51,"tool_calls":50,"delegated":false},"winner_context":"grove-only","delta_ctx_pct":null}
+,
+"webpack":{"baseline_killed":false,"baseline":{"context":1544746,"time_s":242.1,"reads":43,"turns":13,"tool_calls":54,"delegated":true},"grove":{"context":237942,"time_s":138.9,"reads":0,"grove_tools":12,"turns":14,"tool_calls":13,"delegated":false},"winner_context":"grove","delta_ctx_pct":-84.6}
+,
+"spring-boot":{"baseline_killed":false,"baseline":{"context":331164,"time_s":146.6,"reads":15,"turns":9,"tool_calls":22,"delegated":true},"grove":{"context":195951,"time_s":87.9,"reads":0,"grove_tools":13,"turns":15,"tool_calls":14,"delegated":false},"winner_context":"grove","delta_ctx_pct":-40.83}
+,
+"rails":{"baseline_killed":false,"baseline":{"context":993542,"time_s":179.5,"reads":34,"turns":14,"tool_calls":43,"delegated":true},"grove":{"context":347090,"time_s":131.4,"reads":0,"grove_tools":22,"turns":24,"tool_calls":23,"delegated":false},"winner_context":"grove","delta_ctx_pct":-65.07}
+,
+"laravel":{"baseline_killed":false,"baseline":{"context":222906,"time_s":107.3,"reads":9,"turns":6,"tool_calls":12,"delegated":true},"grove":{"context":269637,"time_s":86.9,"reads":0,"grove_tools":18,"turns":20,"tool_calls":19,"delegated":false},"winner_context":"baseline","delta_ctx_pct":20.96}
+  }
+}

@@ -333,11 +333,70 @@ Caveats:
 - typescript/bitcoin baselines were killed at 1.5MB; grove-only metrics are valid but
   no head-to-head comparison is possible.
 
+## L3 flow trace — all 10 repos (evaluated 2026-06-26, model sonnet, grove v0.1.8)
+
+Full report: [`reports/L3-flowtrace.md`](reports/L3-flowtrace.md). Aggregate:
+[`evidence/L3.eval.json`](evidence/L3.eval.json). Transcripts: `evidence/L3/`.
+
+Prompt (per repo): *"Trace how `<X>` flows from `<entry point>` to `<terminal
+effect>`; list every function in order, with file:line."* (e.g. redis SET
+socket-read→keyspace-write, django `WSGIHandler.__call__`→view, bitcoin
+wire-TX→mempool).
+
+**The L3 result is convergence, not just cost.** L3 is the rung where
+read-the-whole-file breaks: **3/10 baselines (bitcoin, hugo, typescript) ran away
+past the 1.5 MB transcript cutoff and were killed** (133/256/189 tool calls at
+kill); **0 grove sides ran away**. A runaway has no `result` event, so its context
+is unmeasurable — reported as grove-only, not a win for either side.
+
+### Context (lower = better; 7 completed races)
+
+| metric | result |
+|---|---|
+| **context win** | **grove 5/7** — redis −58%, webpack −85%, rails −65%, spring-boot −41%, tokio −12% |
+| baseline wins | django +34%, laravel +21% (short chains, baseline reads <10 files — grove's fixed steering tax dominates) |
+| **reads** | grove **0–6 on 9/10** (typescript 29 outlier) vs baseline 6–222 |
+| baseline delegation | **10/10 baselines** ran `delegated:true`; **0 grove** sides delegated |
+
+Context win scales with chain depth — deep dispatch chains (webpack, rails, redis)
+are landslides; short signposted chains (django, laravel) are the documented
+thin-prompt regime where grove's ~30k overhead isn't amortised.
+
+### Quality (sampled, source-verified — not blind A/B; 3 baselines have no answer)
+
+| check | result |
+|---|---|
+| entry-point cites sampled (≥1/repo) | 16 |
+| line-exact vs pinned source | **16/16** |
+| fabricated functions/files | **0** |
+| traces reaching correct terminal effect | **10/10** |
+
+Real improvement over the original redis L3 (where grove fabricated `db->dict`):
+on v0.1.8 across 10 languages the flow traces are line-accurate at entry points
+with no fabrication. Verified claim is **grounding**, not exhaustive recall (16
+cites checked, not every step of every chain) — see report caveats.
+
+### Grove issues surfaced
+
+- **GI-2 thin-prompt overhead, now bounded** (≤ +34%): grove loses context only
+  on the short chains where baseline reads <10 files. Expected regime, not a regression.
+- **typescript grove read-heavy (29 reads):** parser.ts is one ~10k-line file;
+  grove fell back to `Read` spans rather than structural tools. Check whether
+  `map`/`callers` cover the parser call graph.
+
+### Verdict (L3, cross-repo)
+
+Grove uses less context on 5/7, **finishes where the baseline can't** (3 runaway
+baselines vs 0 grove), stays at 0–6 reads on 9/10, and is line-accurate at entry
+points (16/16). First rung where grove's edge is *convergence*, not just cost.
+
+---
+
 ## Remaining rungs (pending)
 
 - [x] L1 — single symbol
 - [x] L2 — def + all call sites (this section)
 - [x] L2 R2 — v0.1.7 fix verification
-- [ ] L3 — flow trace
+- [x] L3 — flow trace (grove v0.1.8) — [`reports/L3-flowtrace.md`](reports/L3-flowtrace.md)
 - [ ] L4 — subsystem end-to-end
 - [ ] L5 — cross-cutting architecture

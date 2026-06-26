@@ -1,0 +1,1 @@
+Trace how Laravel handles an incoming HTTP request through the framework HTTP kernel: name every method it passes through, in order, from `Http\Kernel::handle` to where the matched route's controller action is dispatched.

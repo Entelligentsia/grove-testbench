@@ -1,0 +1,60 @@
+{
+  "repo": "opt-laravel-L3_flow",
+  "agent": "claude",
+  "sides": {
+    "baseline": {
+      "grove": false,
+      "present": true,
+      "input_tokens": 569,
+      "output_tokens": 7610,
+      "cache_read_tokens": 157919,
+      "cache_creation_tokens": 64418,
+      "context_tokens": 222906,
+      "orchestrator_context_tokens": 123113,
+      "subagent_context_tokens": 99793,
+      "delegated": true,
+      "parent_tool_calls": 5,
+      "subagent_tool_calls": 7,
+      "output_tokens_only": 7610,
+      "total_tokens": 230516,
+      "turns": 6,
+      "tool_calls": 12,
+      "duration_ms": 107284,
+      "duration_s": 107.284,
+      "cost_usd": 0.28282229999999997
+    },
+    "grove": {
+      "grove": true,
+      "present": true,
+      "input_tokens": 564,
+      "output_tokens": 4826,
+      "cache_read_tokens": 253286,
+      "cache_creation_tokens": 15787,
+      "context_tokens": 269637,
+      "orchestrator_context_tokens": 269091,
+      "subagent_context_tokens": 546,
+      "delegated": false,
+      "parent_tool_calls": 19,
+      "subagent_tool_calls": 0,
+      "output_tokens_only": 4826,
+      "total_tokens": 274463,
+      "turns": 20,
+      "tool_calls": 19,
+      "duration_ms": 86871,
+      "duration_s": 86.871,
+      "cost_usd": 0.2435478
+    }
+  },
+  "winner": {
+    "context": "baseline",
+    "time": "grove",
+    "tool_calls": "baseline",
+    "turns": "baseline"
+  },
+  "delta_pct": {
+    "context": 20.96,
+    "time": -19.03,
+    "tool_calls": 58.33,
+    "turns": 233.33
+  }
+}
