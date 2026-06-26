@@ -1,0 +1,99 @@
+{
+  "rung": "L4",
+  "title": "subsystem end-to-end",
+  "date": "2026-06-27",
+  "grove_version": "0.1.8",
+  "model": "sonnet",
+  "cutoff_bytes": 1500000,
+  "repos": {
+    "laravel": {
+      "subsystem": "service container",
+      "baseline_killed": false,
+      "baseline": { "context": 396552, "time_s": 274.128, "reads": 16, "tool_calls": 19, "turns": 12, "delegated": true },
+      "grove":    { "context": 252399, "time_s": 242.359, "reads": 0, "grove_tools": 22, "tool_calls": 23, "turns": 24, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -36.35
+    }
+,
+    "django": {
+      "subsystem": "ORM query execution",
+      "baseline_killed": false,
+      "baseline": { "context": 2839421, "time_s": 326.332, "reads": 68, "tool_calls": 90, "turns": 32, "delegated": true },
+      "grove":    { "context": 391322, "time_s": 212.348, "reads": 0, "grove_tools": 41, "tool_calls": 42, "turns": 43, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -86.22
+    }
+,
+    "spring-boot": {
+      "subsystem": "auto-configuration",
+      "baseline_killed": false,
+      "baseline": { "context": 1868359, "time_s": 445.373, "reads": 53, "tool_calls": 74, "turns": 28, "delegated": true },
+      "grove":    { "context": 716252, "time_s": 273.734, "reads": 0, "grove_tools": 52, "tool_calls": 55, "turns": 56, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -61.66
+    }
+,
+    "redis": {
+      "subsystem": "key expiration",
+      "baseline_killed": false,
+      "baseline": { "context": 1973702, "time_s": 355.972, "reads": 41, "tool_calls": 51, "turns": 23, "delegated": true },
+      "grove":    { "context": 365475, "time_s": 191.415, "reads": 0, "grove_tools": 38, "tool_calls": 39, "turns": 40, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -81.48
+    }
+,
+    "rails": {
+      "subsystem": "Action Dispatch routing",
+      "baseline_killed": false,
+      "baseline": { "context": 2290324, "time_s": 356.764, "reads": 52, "tool_calls": 58, "turns": 22, "delegated": true },
+      "grove":    { "context": 450865, "time_s": 250.843, "reads": 0, "grove_tools": 37, "tool_calls": 38, "turns": 39, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -80.31
+    }
+,
+    "tokio": {
+      "subsystem": "I/O driver (reactor)",
+      "baseline_killed": false,
+      "baseline": { "context": 423449, "time_s": 227.176, "reads": 18, "tool_calls": 22, "turns": 2, "delegated": true },
+      "grove":    { "context": 797313, "time_s": 234.327, "reads": 4, "grove_tools": 44, "tool_calls": 50, "turns": 51, "delegated": false },
+      "winner_context": "baseline",
+      "delta_ctx_pct": 88.29
+    }
+,
+    "webpack": {
+      "subsystem": "module build",
+      "baseline_killed": false,
+      "baseline": { "context": 2549777, "time_s": 376.589, "reads": 61, "tool_calls": 69, "turns": 25, "delegated": true },
+      "grove":    { "context": 612882, "time_s": 213.689, "reads": 2, "grove_tools": 29, "tool_calls": 32, "turns": 33, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -75.96
+    }
+,
+    "bitcoin": {
+      "subsystem": "mempool acceptance",
+      "baseline_killed": false,
+      "baseline": { "context": 462927, "time_s": 266.204, "reads": 11, "tool_calls": 13, "turns": 2, "delegated": true },
+      "grove":    { "context": 669338, "time_s": 584.441, "reads": 2, "grove_tools": 55, "tool_calls": 58, "turns": 59, "delegated": false },
+      "winner_context": "baseline",
+      "delta_ctx_pct": 44.59
+    }
+,
+    "typescript": {
+      "subsystem": "binder",
+      "baseline_killed": false,
+      "baseline": { "context": 1482241, "time_s": 249.347, "reads": 34, "tool_calls": 49, "turns": 4, "delegated": true },
+      "grove":    { "context": 2070466, "time_s": 341.181, "reads": 22, "grove_tools": 17, "tool_calls": 43, "turns": 44, "delegated": false },
+      "winner_context": "baseline",
+      "delta_ctx_pct": 39.68
+    }
+,
+    "hugo": {
+      "subsystem": "content render pipeline",
+      "baseline_killed": true,
+      "baseline": { "context": null, "time_s": 0, "reads": 293, "tool_calls": 343, "turns": 0, "delegated": true },
+      "grove":    { "context": 2584054, "time_s": 403.79, "reads": 0, "grove_tools": 96, "tool_calls": 97, "turns": 98, "delegated": false },
+      "winner_context": "grove-only",
+      "delta_ctx_pct": null
+    }
+  }
+}

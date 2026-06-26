@@ -1,0 +1,60 @@
+{
+  "repo": "opt-django-L4_subsystem",
+  "agent": "claude",
+  "sides": {
+    "baseline": {
+      "grove": false,
+      "present": true,
+      "input_tokens": 756,
+      "output_tokens": 17987,
+      "cache_read_tokens": 2632475,
+      "cache_creation_tokens": 206190,
+      "context_tokens": 2839421,
+      "orchestrator_context_tokens": 664316,
+      "subagent_context_tokens": 2175105,
+      "delegated": true,
+      "parent_tool_calls": 31,
+      "subagent_tool_calls": 59,
+      "output_tokens_only": 17987,
+      "total_tokens": 2857408,
+      "turns": 32,
+      "tool_calls": 90,
+      "duration_ms": 326332,
+      "duration_s": 326.332,
+      "cost_usd": 1.0817255
+    },
+    "grove": {
+      "grove": true,
+      "present": true,
+      "input_tokens": 626,
+      "output_tokens": 13311,
+      "cache_read_tokens": 325556,
+      "cache_creation_tokens": 65140,
+      "context_tokens": 391322,
+      "orchestrator_context_tokens": 390717,
+      "subagent_context_tokens": 605,
+      "delegated": false,
+      "parent_tool_calls": 42,
+      "subagent_tool_calls": 0,
+      "output_tokens_only": 13311,
+      "total_tokens": 404633,
+      "turns": 43,
+      "tool_calls": 42,
+      "duration_ms": 212348,
+      "duration_s": 212.348,
+      "cost_usd": 0.6886298
+    }
+  },
+  "winner": {
+    "context": "grove",
+    "time": "grove",
+    "tool_calls": "grove",
+    "turns": "baseline"
+  },
+  "delta_pct": {
+    "context": -86.22,
+    "time": -34.93,
+    "tool_calls": -53.33,
+    "turns": 34.38
+  }
+}

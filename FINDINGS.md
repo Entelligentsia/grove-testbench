@@ -392,11 +392,48 @@ points (16/16). First rung where grove's edge is *convergence*, not just cost.
 
 ---
 
+## L4 subsystem end-to-end — all 10 repos (evaluated 2026-06-27, model sonnet, grove v0.1.8)
+
+Full report: [`reports/L4-subsystem.md`](reports/L4-subsystem.md). One subsystem
+per repo (every entry point + components + data structures + one unified call
+graph), mirroring redis's original L4 (key expiration). Careful **serial**
+protocol — one side at a time to completion — with a 1.5 MB runaway watchdog.
+
+| Repo | subsystem | baseline ctx | grove ctx | Δ | ctx win |
+|---|---|---|---|---|---|
+| laravel | service container | 396,552 | 252,399 | −36% | grove |
+| django | ORM query exec | 2,839,421 | 391,322 | −86% | grove |
+| spring-boot | auto-configuration | 1,868,359 | 716,252 | −62% | grove |
+| redis | key expiration | 1,973,702 | 365,475 | −81% | grove |
+| rails | Action Dispatch routing | 2,290,324 | 450,865 | −80% | grove |
+| webpack | module build | 2,549,777 | 612,882 | −76% | grove |
+| tokio | I/O driver (reactor) | 423,449 | 797,313 | +88% | baseline |
+| bitcoin | mempool acceptance | 462,927 | 669,338 | +45% | baseline |
+| typescript | binder | 1,482,241 | 2,070,466 | +40% | baseline |
+| hugo | content render pipeline | *killed @1.5MB* | 2,584,054 | — | grove-only |
+
+**Tally: grove 6 / baseline 3 / grove-only 1** (hugo baseline DNF). The first rung
+with a genuine split — and it's *breadth-dependent*. grove wins big (36–86%) on
+**sprawling** subsystems whose answer spans many files (django/redis/rails/webpack):
+baseline's delegated subagents read 40–68 whole files → 1.9–2.8 M context, grove
+stays at 0.37–0.61 M with **0 reads**. baseline wins on **compact** subsystems
+(tokio/bitcoin/typescript) a single subagent maps in 11–34 reads, where grove's
+17–55 granular structural fetches over-pay (GI-3 over-read) — a *different*
+mechanism than L3's thin-prompt losses. Notably the two repos grove lost at L3
+(django, laravel) **flipped to grove wins** once the task broadened.
+
+Every baseline delegated; no grove side did. Grounding verified: **15/15
+entry-point cites line-exact** across all 10 repos, no fabrication, no recurrence
+of the original redis L4 −1 off-by-one. Open grove issues: over-read on small
+subsystems, and the `binder.ts` large-single-file read fallback (typescript again).
+
+---
+
 ## Remaining rungs (pending)
 
 - [x] L1 — single symbol
 - [x] L2 — def + all call sites (this section)
 - [x] L2 R2 — v0.1.7 fix verification
 - [x] L3 — flow trace (grove v0.1.8) — [`reports/L3-flowtrace.md`](reports/L3-flowtrace.md)
-- [ ] L4 — subsystem end-to-end
+- [x] L4 — subsystem end-to-end (grove v0.1.8) — [`reports/L4-subsystem.md`](reports/L4-subsystem.md)
 - [ ] L5 — cross-cutting architecture
