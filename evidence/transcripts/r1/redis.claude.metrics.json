@@ -1,0 +1,50 @@
+{
+  "repo": "redis",
+  "agent": "claude",
+  "sides": {
+    "db": {
+      "grove": false,
+      "present": true,
+      "input_tokens": 4,
+      "output_tokens": 988,
+      "cache_read_tokens": 46442,
+      "cache_creation_tokens": 2513,
+      "context_tokens": 48959,
+      "output_tokens_only": 988,
+      "total_tokens": 49947,
+      "turns": 2,
+      "tool_calls": 9,
+      "duration_ms": 47823,
+      "duration_s": 47.823,
+      "cost_usd": 0.09917675
+    },
+    "dg": {
+      "grove": true,
+      "present": true,
+      "input_tokens": 7,
+      "output_tokens": 2543,
+      "cache_read_tokens": 73362,
+      "cache_creation_tokens": 5864,
+      "context_tokens": 79233,
+      "output_tokens_only": 2543,
+      "total_tokens": 81776,
+      "turns": 4,
+      "tool_calls": 3,
+      "duration_ms": 41274,
+      "duration_s": 41.274,
+      "cost_usd": 0.09596859999999999
+    }
+  },
+  "winner": {
+    "context": "db",
+    "time": "dg",
+    "tool_calls": "dg",
+    "turns": "db"
+  },
+  "delta_pct": {
+    "context": 61.84,
+    "time": -13.69,
+    "tool_calls": -66.67,
+    "turns": 100
+  }
+}

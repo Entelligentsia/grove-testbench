@@ -1,0 +1,60 @@
+{
+  "repo": "opt-redis-L5_arch",
+  "agent": "claude",
+  "sides": {
+    "db": {
+      "grove": false,
+      "present": true,
+      "input_tokens": 714,
+      "output_tokens": 11442,
+      "cache_read_tokens": 1468121,
+      "cache_creation_tokens": 73000,
+      "context_tokens": 1541835,
+      "orchestrator_context_tokens": 52497,
+      "subagent_context_tokens": 1489338,
+      "delegated": true,
+      "parent_tool_calls": 1,
+      "subagent_tool_calls": 46,
+      "output_tokens_only": 11442,
+      "total_tokens": 1553277,
+      "turns": 2,
+      "tool_calls": 47,
+      "duration_ms": 181053,
+      "duration_s": 181.053,
+      "cost_usd": 0.3883066000000001
+    },
+    "dg": {
+      "grove": true,
+      "present": true,
+      "input_tokens": 584,
+      "output_tokens": 8815,
+      "cache_read_tokens": 591439,
+      "cache_creation_tokens": 39012,
+      "context_tokens": 631035,
+      "orchestrator_context_tokens": 630475,
+      "subagent_context_tokens": 560,
+      "delegated": false,
+      "parent_tool_calls": 29,
+      "subagent_tool_calls": 0,
+      "output_tokens_only": 8815,
+      "total_tokens": 639850,
+      "turns": 30,
+      "tool_calls": 29,
+      "duration_ms": 182671,
+      "duration_s": 182.671,
+      "cost_usd": 0.5441906999999999
+    }
+  },
+  "winner": {
+    "context": "dg",
+    "time": "db",
+    "tool_calls": "dg",
+    "turns": "db"
+  },
+  "delta_pct": {
+    "context": -59.07,
+    "time": 0.89,
+    "tool_calls": -38.3,
+    "turns": 1400
+  }
+}

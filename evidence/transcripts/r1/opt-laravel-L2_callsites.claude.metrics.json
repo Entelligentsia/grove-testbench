@@ -1,0 +1,60 @@
+{
+  "repo": "opt-laravel-L2_callsites",
+  "agent": "claude",
+  "sides": {
+    "db": {
+      "grove": false,
+      "present": true,
+      "input_tokens": 572,
+      "output_tokens": 12559,
+      "cache_read_tokens": 374918,
+      "cache_creation_tokens": 47352,
+      "context_tokens": 422842,
+      "orchestrator_context_tokens": 55646,
+      "subagent_context_tokens": 367196,
+      "delegated": true,
+      "parent_tool_calls": 1,
+      "subagent_tool_calls": 15,
+      "output_tokens_only": 12559,
+      "total_tokens": 435401,
+      "turns": 2,
+      "tool_calls": 16,
+      "duration_ms": 136423,
+      "duration_s": 136.423,
+      "cost_usd": 0.2770969
+    },
+    "dg": {
+      "grove": true,
+      "present": true,
+      "input_tokens": 569,
+      "output_tokens": 13965,
+      "cache_read_tokens": 429647,
+      "cache_creation_tokens": 55785,
+      "context_tokens": 486001,
+      "orchestrator_context_tokens": 180810,
+      "subagent_context_tokens": 305191,
+      "delegated": true,
+      "parent_tool_calls": 8,
+      "subagent_tool_calls": 31,
+      "output_tokens_only": 13965,
+      "total_tokens": 499966,
+      "turns": 9,
+      "tool_calls": 39,
+      "duration_ms": 226567,
+      "duration_s": 226.567,
+      "cost_usd": 0.59222235
+    }
+  },
+  "winner": {
+    "context": "db",
+    "time": "db",
+    "tool_calls": "db",
+    "turns": "db"
+  },
+  "delta_pct": {
+    "context": 14.94,
+    "time": 66.08,
+    "tool_calls": 143.75,
+    "turns": 350
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "repo": "opt-typescript-L2_callsites",
+  "agent": "claude",
+  "sides": {
+    "db": {
+      "grove": false,
+      "present": true,
+      "input_tokens": 667,
+      "output_tokens": 6512,
+      "cache_read_tokens": 627166,
+      "cache_creation_tokens": 31893,
+      "context_tokens": 659726,
+      "orchestrator_context_tokens": 50272,
+      "subagent_context_tokens": 609454,
+      "delegated": true,
+      "parent_tool_calls": 1,
+      "subagent_tool_calls": 33,
+      "output_tokens_only": 6512,
+      "total_tokens": 666238,
+      "turns": 2,
+      "tool_calls": 34,
+      "duration_ms": 115117,
+      "duration_s": 115.117,
+      "cost_usd": 0.20414915
+    },
+    "dg": {
+      "grove": true,
+      "present": true,
+      "input_tokens": 537,
+      "output_tokens": 2119,
+      "cache_read_tokens": 124704,
+      "cache_creation_tokens": 14164,
+      "context_tokens": 139405,
+      "orchestrator_context_tokens": 138879,
+      "subagent_context_tokens": 526,
+      "delegated": false,
+      "parent_tool_calls": 6,
+      "subagent_tool_calls": 0,
+      "output_tokens_only": 2119,
+      "total_tokens": 141524,
+      "turns": 7,
+      "tool_calls": 6,
+      "duration_ms": 144099,
+      "duration_s": 144.099,
+      "cost_usd": 0.15457920000000003
+    }
+  },
+  "winner": {
+    "context": "dg",
+    "time": "db",
+    "tool_calls": "dg",
+    "turns": "db"
+  },
+  "delta_pct": {
+    "context": -78.87,
+    "time": 25.18,
+    "tool_calls": -82.35,
+    "turns": 250
+  }
+}
