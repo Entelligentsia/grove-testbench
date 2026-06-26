@@ -1,0 +1,1 @@
+Trace how webpack builds a single module after it has been resolved: name every function it passes through, in order, from where the Compilation begins building the module to where the module's source has been run through its loaders and parsed into dependencies.

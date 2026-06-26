@@ -1,0 +1,60 @@
+{
+  "repo": "opt-tokio-L3_flow",
+  "agent": "claude",
+  "sides": {
+    "baseline": {
+      "grove": false,
+      "present": true,
+      "input_tokens": 717,
+      "output_tokens": 14940,
+      "cache_read_tokens": 2046403,
+      "cache_creation_tokens": 105895,
+      "context_tokens": 2153015,
+      "orchestrator_context_tokens": 383686,
+      "subagent_context_tokens": 1769329,
+      "delegated": true,
+      "parent_tool_calls": 15,
+      "subagent_tool_calls": 39,
+      "output_tokens_only": 14940,
+      "total_tokens": 2167955,
+      "turns": 16,
+      "tool_calls": 54,
+      "duration_ms": 259916,
+      "duration_s": 259.916,
+      "cost_usd": 0.7075699500000001
+    },
+    "grove": {
+      "grove": true,
+      "present": true,
+      "input_tokens": 665,
+      "output_tokens": 14456,
+      "cache_read_tokens": 1828688,
+      "cache_creation_tokens": 57885,
+      "context_tokens": 1887238,
+      "orchestrator_context_tokens": 1886687,
+      "subagent_context_tokens": 551,
+      "delegated": false,
+      "parent_tool_calls": 62,
+      "subagent_tool_calls": 0,
+      "output_tokens_only": 14456,
+      "total_tokens": 1901694,
+      "turns": 63,
+      "tool_calls": 62,
+      "duration_ms": 273261,
+      "duration_s": 273.261,
+      "cost_usd": 1.1134494
+    }
+  },
+  "winner": {
+    "context": "grove",
+    "time": "baseline",
+    "tool_calls": "baseline",
+    "turns": "baseline"
+  },
+  "delta_pct": {
+    "context": -12.34,
+    "time": 5.13,
+    "tool_calls": 14.81,
+    "turns": 293.75
+  }
+}

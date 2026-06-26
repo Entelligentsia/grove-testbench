@@ -1,0 +1,1 @@
+Trace how Django handles an incoming HTTP request: name every function it passes through, in order, from the WSGI entry point (`WSGIHandler.__call__`) to where the matched view function is called.
