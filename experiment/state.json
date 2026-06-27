@@ -67,13 +67,28 @@
       "status": "pending"
     },
     "L1-baseline-django": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 34,
+      "context": 72102,
+      "engaged": true,
+      "evidence": "evidence/nav3/L1/raw/django-L1.claude.baseline.jsonl",
+      "ts": "2026-06-27T09:54:42.390Z"
     },
     "L1-grove-django": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 30,
+      "context": 102578,
+      "engaged": true,
+      "evidence": "evidence/nav3/L1/raw/django-L1.claude.grove.jsonl",
+      "ts": "2026-06-27T09:54:05.984Z"
     },
     "L1-lsp-django": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 42,
+      "context": 127173,
+      "engaged": true,
+      "evidence": "evidence/nav3/L1/raw/django-L1.claude.lsp.jsonl",
+      "ts": "2026-06-27T09:55:26.787Z"
     },
     "L2-baseline-django": {
       "status": "pending"
