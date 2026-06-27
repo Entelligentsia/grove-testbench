@@ -82,11 +82,20 @@ CFG="$OUT/.cfg"; mkdir -p "$CFG"
 printf '{ "mcpServers": {} }\n' > "$CFG/empty-mcp.json"
 printf '{ "mcpServers": { "grove": { "command": "grove", "args": ["serve"] } } }\n' > "$CFG/grove-mcp.json"
 
-# Stage a world-readable copy of the live host creds (the container user `bench`,
-# uid 1001, can't read the host's 0600 file owned by uid 1000). Mounted read-only;
-# token is valid for the session so no refresh/rotation happens in-container.
+# Stage a WRITABLE .claude dir (mode 0777) holding the live host creds, and mount
+# the whole dir at /home/bench/.claude. Do NOT bind-mount the bare creds file into
+# /home/bench/.claude/.credentials.json: the image has no /home/bench/.claude, so
+# docker then creates it owned by ROOT, and the bench user (uid 1001) can't
+# `mkdir /home/bench/.claude/session-env` — which makes EVERY Bash tool call die
+# with EACCES and silently cripples the agent into Read-only (grep/find never run,
+# baseline catastrophically, grove on the cells where it reaches for Bash).
+# Mounting a 0777 dir keeps session-env writable AND creds readable.
 HAVE_CREDS=0
-if [[ -f "$CREDS" ]]; then install -m 0644 "$CREDS" "$CFG/creds.json" && HAVE_CREDS=1; fi
+DOTCLAUDE="$CFG/dotclaude"
+if [[ -f "$CREDS" ]]; then
+  mkdir -p "$DOTCLAUDE"; chmod 0777 "$DOTCLAUDE"
+  install -m 0644 "$CREDS" "$DOTCLAUDE/.credentials.json" && HAVE_CREDS=1
+fi
 
 # --- realistic base steering (fair baseline) -------------------------------
 # If claude-md/<repo>.base.md exists, BOTH sides get it as the repo's CLAUDE.md
@@ -122,7 +131,7 @@ capture_side() {
     # live host creds over the image's expired baked ones (read-only; token is
     # valid for the session so no in-container refresh/rotation is needed)
     local credmount=""
-    [[ "$HAVE_CREDS" == 1 ]] && credmount="-v '$CFG/creds.json:/home/bench/.claude/.credentials.json:ro'"
+    [[ "$HAVE_CREDS" == 1 ]] && credmount="-v '$DOTCLAUDE:/home/bench/.claude'"
     # inject the fair base steering, if provided: baseline gets base only; grove
     # gets base prepended to its baked grove block (both sides end up with the
     # same project guidance, grove side additionally steered to grove).

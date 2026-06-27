@@ -43,9 +43,18 @@ OUT="$(cd "$OUT" && pwd)"   # docker volume mounts require an absolute path
 # stage world-readable creds + mcp configs (container user bench=uid1001 can't
 # read the host 0600 creds)
 CFG="$OUT/.cfg"; mkdir -p "$CFG"
-install -m 0644 "$CREDS" "$CFG/creds.json"
 printf '{ "mcpServers": {} }\n' > "$CFG/empty-mcp.json"
 printf '{ "mcpServers": { "grove": { "command": "grove", "args": ["serve"] } } }\n' > "$CFG/grove-mcp.json"
+
+# Stage a WRITABLE .claude dir (mode 0777) holding the creds, and mount the whole
+# dir at /home/bench/.claude.  Do NOT bind-mount the bare creds file into
+# /home/bench/.claude/.credentials.json: the image has no /home/bench/.claude, so
+# docker then creates it owned by ROOT, and the bench user (uid 1001) can't
+# `mkdir /home/bench/.claude/session-env` — which makes EVERY Bash tool call die
+# with `EACCES` and silently cripples the baseline into Read-only (grep/find
+# never run). Mounting a 0777 dir keeps session-env writable AND creds readable.
+DOTCLAUDE="$CFG/dotclaude"; mkdir -p "$DOTCLAUDE"; chmod 0777 "$DOTCLAUDE"
+install -m 0644 "$CREDS" "$DOTCLAUDE/.credentials.json"
 
 IMG="$BASE_IMG"; CFGNAME=empty-mcp.json
 [[ "$SIDE" == grove ]] && { IMG="$GROVE_IMG"; CFGNAME=grove-mcp.json; }
@@ -73,7 +82,7 @@ echo "    repo dir: $CREPO   out: $OUTFILE"
 docker run --rm \
   -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e COLORTERM=truecolor \
   -e RACE_PROMPT="$(cat "$PROMPT_FILE")" \
-  -v "$CFG/creds.json:/home/bench/.claude/.credentials.json:ro" \
+  -v "$DOTCLAUDE:/home/bench/.claude" \
   -v "$CFG:/cfg:ro" \
   "$IMG" \
   bash -lc "cd $CREPO && $INJECT; claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions ${MODEL_ARG[*]} --strict-mcp-config --mcp-config /cfg/$CFGNAME" \
