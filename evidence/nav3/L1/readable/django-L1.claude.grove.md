@@ -1,79 +1,118 @@
 # transcript: When the router finishes matching an incoming URL, it hands the rest of the request machinery a single object that captures everything known about which view...
 
   ▸ ToolSearch(select:mcp__grove__symbols,mcp__grove__source,mcp__grove__outline)
-  ▸ mcp__grove__symbols({"dir":"django/urls","name":"ResolverMatch","kind":"class"})
+  ▸ mcp__grove__symbols({"dir":"django/urls","name":"ResolverMatch"})
   ▸ mcp__grove__source({"id":"python:django/urls/resolvers.py#ResolverMatch@34"})
 
-💬 Here is a complete walkthrough of `ResolverMatch` (`django/urls/resolvers.py:34`).  ---  ## The core triple  `ResolverMatch` stores the resolved view as thre...
+💬 Here is a thorough walkthrough of `ResolverMatch` (`django/urls/resolvers.py:34`).  ---  ## What it records  ### The callable  `self.func` is the raw view ca...
 
-──────── RESULT (success, 28121ms, 4 turns) ────────
-Here is a complete walkthrough of `ResolverMatch` (`django/urls/resolvers.py:34`).
+──────── RESULT (success, 41860ms, 4 turns) ────────
+Here is a thorough walkthrough of `ResolverMatch` (`django/urls/resolvers.py:34`).
 
 ---
 
-## The core triple
+## What it records
 
-`ResolverMatch` stores the resolved view as three pieces:
+### The callable
 
-- **`func`** — the actual callable that will handle the request. For a class-based view Django stores `MyView.as_view()` here, which is the per-instance wrapper; the underlying class is detectable via `func.view_class`.
-- **`args`** — positional URL captures (from unnamed groups in a regex pattern).
-- **`kwargs`** — keyword URL captures (from named groups, or named path converters).
+`self.func` is the raw view callable as stored on the URL pattern — this is exactly what Django calls with `(request, *args, **kwargs)`. For a class-based view, the pattern stores the result of `MyView.as_view()`, which is a plain function, so `func` is always callable. The `__init__` also inspects `func` sideways (without mutating `self.func`) to build a human-readable dotted path:
 
-The class makes the triple directly subscriptable via `__getitem__` (`resolvers.py:77`):
+- If `func` has a `view_class` attribute (set by `as_view()`), it peeks at that class instead.
+- If the result has `__name__` → function-based view → `module.funcname`.
+- If not → bare class instance → `module.classname`.
+
+That path goes into `self._func_path`, used only for `__repr__` and as a fallback for `view_name`.
+
+---
+
+### URL arguments
+
+`self.args` — positional captures from the URL pattern (from unnamed groups in a regex route).  
+`self.kwargs` — keyword captures (from named groups or `path()` converters).
+
+These are exactly the values that will be spread into the view call. Two finer-grained attributes distinguish where kwargs came from:
+
+- `self.captured_kwargs` — only the kwargs pulled directly from the URL match itself.
+- `self.extra_kwargs` — kwargs added by the `URLPattern`/`URLResolver` via the static `kwargs` dict on the pattern definition (the third positional arg to `path()`/`re_path()`).
+
+In the normal case `kwargs = captured_kwargs | extra_kwargs`. The split lets tooling or middleware tell them apart.
+
+---
+
+### Naming
+
+`self.url_name` — the bare `name=` string from the pattern definition, with no namespace prefix. `None` if the pattern was anonymous.
+
+`self.route` — the raw route string from the matched pattern (e.g. `"articles/<int:pk>/"`), useful for debugging and for `reverse()` consistency checks.
+
+---
+
+### Namespace handling
+
+Namespaces are stacked: each nested `include()` can contribute one app namespace and one instance namespace. Both are collected as lists so nothing is lost when includes are nested multiple levels deep.
+
+| Attribute | What it holds |
+|---|---|
+| `self.app_names` | List of app namespaces, outer-to-inner (`["myapp", "subapp"]`) |
+| `self.app_name` | Colon-joined string: `"myapp:subapp"` |
+| `self.namespaces` | List of instance namespaces in the same order |
+| `self.namespace` | Colon-joined string: `"myapp:subapp"` |
+
+Empty strings from `include()` calls that carry no namespace are filtered out before joining, so the strings are always clean.
+
+`self.view_name` is the fully-qualified, `reverse()`-compatible name:
+
+```python
+view_path = url_name or self._func_path   # prefer the declared name
+self.view_name = ":".join([*self.namespaces, view_path])
+# e.g. "admin:auth:user-list"
+```
+
+---
+
+### The (view, args, kwargs) triple
+
+`__getitem__` makes the object subscriptable as a 3-tuple:
 
 ```python
 def __getitem__(self, index):
     return (self.func, self.args, self.kwargs)[index]
 ```
 
-This is what lets calling code do `func, args, kwargs = match` — the object unpacks like a 3-tuple.
-
----
-
-## Naming layers
-
-There are two parallel naming hierarchies, both built from lists so colon-joined namespaces compose correctly:
-
-| Attribute | What it holds |
-|---|---|
-| `url_name` | The bare `name=` given to `path()` / `re_path()`, e.g. `"detail"`. No namespace prefix. |
-| `app_names` / `app_name` | Per-`include()` **app** namespace list, joined as `"app1:app2"`. Represents the *application* identity, shared across all deployments of an app. |
-| `namespaces` / `namespace` | Per-`include()` **instance** namespace list, joined the same way. Represents *this particular mount* of the app. |
-| `view_name` | The fully-qualified reversible name: `namespace + ":" + url_name` (or the dotted import path if `url_name` is absent). This is what `reverse()` works from. |
-
-`app_names` and `namespaces` are always lists (empty lists, not `None`) because a URL can be included inside multiple nested `include()` calls, each adding a layer.
-
----
-
-## View-path resolution (lines 55–62)
-
-`__init__` immediately inspects `func` to build `_func_path`, a dotted import path used for debugging:
+This means older code can unpack `match` directly:
 
 ```python
-if hasattr(func, "view_class"):
-    func = func.view_class          # peel the as_view() wrapper
-if not hasattr(func, "__name__"):
-    # class instance used as view
-    self._func_path = func.__class__.__module__ + "." + func.__class__.__name__
-else:
-    # plain function or class itself
-    self._func_path = func.__module__ + "." + func.__name__
+func, args, kwargs = match          # tuple-style
+view  = match[0]                    # also works
 ```
 
-This is used in `__repr__` (and as a fallback for `view_name`) but is not normally consumed by request dispatch.
+That convention predates named attributes; the subscript interface is kept for backward compatibility. Modern code reads the named attributes.
 
 ---
 
-## Extra route metadata
+### Other bits
 
-Three more attributes carry context from the resolver:
+`self.tried` — the list of patterns that were attempted before this one matched, used to build the `404` detail page.
 
-- **`route`** — the raw URL pattern string (`"articles/<int:pk>/"`) that was matched. Useful for debugging.
-- **`tried`** — the list of patterns that were attempted before this one matched; populated on `Resolver404` but also stored on a successful match for introspection.
-- **`captured_kwargs`** / **`extra_kwargs`** — a split of `kwargs` that distinguishes captures from the URL pattern itself (`captured_kwargs`) versus kwargs injected by the route definition's `kwargs=` dict (`extra_kwargs`). This split exists so code that inspects or transforms the match can distinguish "came from the URL" from "came from the route definition".
+`__reduce_ex__` raises `PicklingError` unconditionally. `ResolverMatch` holds a live callable and namespace state that cannot survive serialization, so pickling is explicitly blocked rather than silently producing bad results.
 
 ---
 
-## Summary
+## Summary picture
 
-`ResolverMatch` is essentially a named 3-tuple (`func`, `args`, `kwargs`) that also carries the resolved name (`url_name`, `view_name`), the full namespace chain (`app_names`, `namespaces`), and diagnostic metadata (`route`, `tried`). The `__getitem__` protocol makes destructuring it like a tuple work without losing access to the named attributes.
+```
+ResolverMatch
+├── func              ← the callable Django will invoke
+├── args / kwargs     ← URL captures ready to pass to the view
+├── captured_kwargs   ┐ kwargs split by origin
+├── extra_kwargs      ┘
+├── url_name          ← bare pattern name
+├── route             ← raw pattern string
+├── app_names / app_name      ← app namespace stack
+├── namespaces / namespace    ← instance namespace stack
+├── view_name         ← fully-qualified, reversible name
+├── tried             ← patterns tested before this one
+└── __getitem__       ← (func, args, kwargs) tuple protocol
+```
+
+The object is essentially a named record: the router fills it in once, then the WSGI/ASGI handler reads `func`, `args`, and `kwargs` to make the call, while middleware and `reverse()` use the name and namespace fields.

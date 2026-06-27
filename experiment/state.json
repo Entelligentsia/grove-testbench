@@ -76,11 +76,11 @@
     },
     "L1-grove-django": {
       "status": "harvested",
-      "run_wall_s": 30,
-      "context": 102578,
+      "run_wall_s": 44,
+      "context": 103084,
       "engaged": true,
       "evidence": "evidence/nav3/L1/raw/django-L1.claude.grove.jsonl",
-      "ts": "2026-06-27T09:54:05.984Z"
+      "ts": "2026-06-27T10:03:43.899Z"
     },
     "L1-lsp-django": {
       "status": "harvested",
