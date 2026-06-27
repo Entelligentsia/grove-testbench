@@ -1,0 +1,100 @@
+{
+  "rung": "L5",
+  "title": "cross-cutting architecture",
+  "date": "2026-06-27",
+  "grove_version": "0.1.8",
+  "model": "sonnet",
+  "cutoff_bytes": 1500000,
+  "protocol": "serial — one side at a time to completion, 60s/1.5MB watchdog",
+  "repos": {
+    "laravel": {
+      "concern": "HTTP request lifecycle",
+      "baseline_killed": false,
+      "baseline": { "context": 708128, "time_s": 261.091, "reads": 24, "tool_calls": 35, "turns": 12, "delegated": true },
+      "grove":    { "context": 470973, "time_s": 225.606, "reads": 0, "grove_tools": 42, "tool_calls": 43, "turns": 44, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -33.49
+    }
+,
+    "redis": {
+      "concern": "master→replica replication pipeline",
+      "baseline_killed": false,
+      "baseline": { "context": 3765186, "time_s": 459.75, "reads": 80, "tool_calls": 97, "turns": 18, "delegated": true },
+      "grove":    { "context": 516053, "time_s": 397.635, "reads": 0, "grove_tools": 40, "tool_calls": 41, "turns": 42, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -86.29
+    }
+,
+    "django": {
+      "concern": "HTTP request/response lifecycle",
+      "baseline_killed": false,
+      "baseline": { "context": 4601484, "time_s": 289.617, "reads": 130, "tool_calls": 170, "turns": 8, "delegated": true },
+      "grove":    { "context": 322554, "time_s": 240.702, "reads": 0, "grove_tools": 38, "tool_calls": 39, "turns": 40, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -92.99
+    }
+,
+    "rails": {
+      "concern": "request lifecycle (Rack→view)",
+      "baseline_killed": false,
+      "baseline": { "context": 4373282, "time_s": 369.74, "reads": 141, "tool_calls": 170, "turns": 21, "delegated": true },
+      "grove":    { "context": 720272, "time_s": 330.046, "reads": 0, "grove_tools": 67, "tool_calls": 68, "turns": 69, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -83.53
+    }
+,
+    "spring-boot": {
+      "concern": "application startup lifecycle",
+      "baseline_killed": true,
+      "baseline": { "context": null, "time_s": 0, "reads": 310, "tool_calls": 379, "turns": 0, "delegated": true },
+      "grove":    { "context": 642976, "time_s": 385.636, "reads": 0, "grove_tools": 61, "tool_calls": 65, "turns": 66, "delegated": false },
+      "winner_context": "grove-only",
+      "delta_ctx_pct": null
+    }
+,
+    "webpack": {
+      "concern": "compile→emit build lifecycle",
+      "baseline_killed": false,
+      "baseline": { "context": 2246909, "time_s": 418.729, "reads": 60, "tool_calls": 67, "turns": 49, "delegated": true },
+      "grove":    { "context": 457680, "time_s": 293.933, "reads": 0, "grove_tools": 27, "tool_calls": 28, "turns": 29, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -79.63
+    }
+,
+    "tokio": {
+      "concern": "task scheduling architecture",
+      "baseline_killed": false,
+      "baseline": { "context": 2859933, "time_s": 537.988, "reads": 73, "tool_calls": 86, "turns": 26, "delegated": true },
+      "grove":    { "context": 724363, "time_s": 344.164, "reads": 0, "grove_tools": 29, "tool_calls": 30, "turns": 31, "delegated": false },
+      "winner_context": "grove",
+      "delta_ctx_pct": -74.67
+    }
+,
+    "bitcoin": {
+      "concern": "block validation & connection",
+      "baseline_killed": true,
+      "baseline": { "context": null, "time_s": 0, "reads": 91, "tool_calls": 126, "turns": 0, "delegated": true },
+      "grove":    { "context": 276997, "time_s": 294.366, "reads": 0, "grove_tools": 26, "tool_calls": 27, "turns": 28, "delegated": false },
+      "winner_context": "grove-only",
+      "delta_ctx_pct": null
+    }
+,
+    "typescript": {
+      "concern": "compiler pipeline (scanner→emit)",
+      "baseline_killed": true,
+      "baseline": { "context": null, "time_s": 0, "reads": 176, "tool_calls": 207, "turns": 0, "delegated": true },
+      "grove":    { "context": 4344775, "time_s": 514.751, "reads": 53, "grove_tools": 47, "tool_calls": 105, "turns": 106, "delegated": false },
+      "winner_context": "grove-only",
+      "delta_ctx_pct": null
+    }
+,
+    "hugo": {
+      "concern": "full site build",
+      "baseline_killed": true,
+      "baseline": { "context": null, "time_s": 0, "reads": 252, "tool_calls": 291, "turns": 0, "delegated": true },
+      "grove":    { "context": 1417364, "time_s": 273.123, "reads": 0, "grove_tools": 64, "tool_calls": 67, "turns": 68, "delegated": false },
+      "winner_context": "grove-only",
+      "delta_ctx_pct": null
+    }
+  }
+}

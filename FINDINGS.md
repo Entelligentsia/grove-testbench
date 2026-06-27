@@ -429,6 +429,43 @@ subsystems, and the `binder.ts` large-single-file read fallback (typescript agai
 
 ---
 
+## L5 cross-cutting architecture — all 10 repos (evaluated 2026-06-27, model sonnet, grove v0.1.8)
+
+Full report: [`reports/L5-arch.md`](reports/L5-arch.md). One cross-cutting concern
+per repo — a walkthrough spanning *multiple* subsystems end-to-end (every
+function/type + one unified architecture diagram), mirroring redis's original L5
+(master→replica replication). Same careful **serial** protocol — one side at a
+time to completion — with a 1.5 MB runaway watchdog (60 s poll).
+
+| Repo | cross-cutting concern | baseline ctx | grove ctx | Δ | ctx win |
+|---|---|---|---|---|---|
+| laravel | HTTP request lifecycle | 708,128 | 470,973 | −33% | grove |
+| redis | replication pipeline | 3,765,186 | 516,053 | −86% | grove |
+| django | request/response lifecycle | 4,601,484 | 322,554 | −93% | grove |
+| rails | request lifecycle | 4,373,282 | 720,272 | −84% | grove |
+| webpack | compile→emit lifecycle | 2,246,909 | 457,680 | −80% | grove |
+| tokio | scheduling architecture | 2,859,933 | 724,363 | −75% | grove |
+| spring-boot | startup lifecycle | *killed @1.5MB* | 642,976 | — | grove-only |
+| bitcoin | block validation & connection | *killed @1.5MB* | 276,997 | — | grove-only |
+| typescript | compiler pipeline | *killed @1.5MB* | 4,344,775 | — | grove-only |
+| hugo | full site build | *killed @1.5MB* | 1,417,364 | — | grove-only |
+
+**Tally: grove 6 / baseline 0 / grove-only 4.** The cleanest rung of the ladder —
+**baseline never wins.** On a concern spanning the whole architecture it either
+loses on context by 33–93% (6 completed) or fails to converge (4 DNFs — the most
+of any rung). It *reverses* L4: the three subsystems baseline won at L4 on
+compactness (tokio +88%, bitcoin +45%, typescript +40%) all flip — tokio to a
+−75% grove win, bitcoin & typescript to baseline DNFs. Every baseline delegated;
+no grove side did; grove ran 0 reads on 9/10 (typescript 53, its recurring
+large-single-file fallback — heaviest cell of the whole ladder at 4.34 M).
+Grounding verified: **13/13 cites line-exact** across all 10 repos, no fabrication.
+
+The full L1→L5 arc is monotone in breadth: grove's edge grows from
+marginal/sometimes-worse on thin prompts (L1–L2) → cheaper and converges where
+baseline can't (L3–L4) → baseline never wins (L5).
+
+---
+
 ## Remaining rungs (pending)
 
 - [x] L1 — single symbol
@@ -436,4 +473,4 @@ subsystems, and the `binder.ts` large-single-file read fallback (typescript agai
 - [x] L2 R2 — v0.1.7 fix verification
 - [x] L3 — flow trace (grove v0.1.8) — [`reports/L3-flowtrace.md`](reports/L3-flowtrace.md)
 - [x] L4 — subsystem end-to-end (grove v0.1.8) — [`reports/L4-subsystem.md`](reports/L4-subsystem.md)
-- [ ] L5 — cross-cutting architecture
+- [x] L5 — cross-cutting architecture (grove v0.1.8) — [`reports/L5-arch.md`](reports/L5-arch.md)

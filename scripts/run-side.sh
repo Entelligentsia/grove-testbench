@@ -38,6 +38,7 @@ PROMPT_FILE="$root/scenes/$SCENE.prompt.txt"
 CREDS="${CLAUDE_CREDS:-$HOME/.claude/.credentials.json}"
 [[ -f "$CREDS" ]] || { echo "missing creds: $CREDS" >&2; exit 1; }
 mkdir -p "$OUT"
+OUT="$(cd "$OUT" && pwd)"   # docker volume mounts require an absolute path
 
 # stage world-readable creds + mcp configs (container user bench=uid1001 can't
 # read the host 0600 creds)
