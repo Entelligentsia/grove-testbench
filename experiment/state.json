@@ -131,10 +131,20 @@
       "status": "pending"
     },
     "L5-grove-django": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 138,
+      "context": 475687,
+      "engaged": true,
+      "evidence": "evidence/nav3/L5/raw/django-L5.claude.grove.jsonl",
+      "ts": "2026-06-27T11:36:40.659Z"
     },
     "L5-lsp-django": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 132,
+      "context": 621281,
+      "engaged": true,
+      "evidence": "evidence/nav3/L5/raw/django-L5.claude.lsp.jsonl",
+      "ts": "2026-06-27T11:38:55.112Z"
     }
   },
   "setup": {
