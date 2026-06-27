@@ -81,18 +81,30 @@ esac
 CREPO="/home/bench/repos/$REPO"
 OUTFILE="$OUT/$SCENE.claude.$SIDE.jsonl"
 
-# fair base steering: baseline gets base.md as CLAUDE.md; grove prepends base.md
-# to its baked grove block. No base file -> leave repo CLAUDE.md as-is.
+# fair tool steering: the two TOOLED arms are symmetric — each gets base.md plus a
+# steering block that points the agent at its navigation capability (grove's block
+# is baked into the image's repo CLAUDE.md by `grove init`; lsp's is the host-side
+# claude-md/lsp-steering.md, uniform across repos since the lsp tool interface is).
+# baseline gets base.md ALONE (vanilla: text search only, by design). No base file
+# -> leave repo CLAUDE.md as-is (lsp still gets its steering block).
 BASEMD="$root/claude-md/$REPO.base.md"
+LSPSTEER="$root/claude-md/lsp-steering.md"
 INJECT=":"
-if [[ -f "$BASEMD" ]]; then
-  cp "$BASEMD" "$CFG/base.md"
-  if [[ "$SIDE" == grove ]]; then
-    INJECT="cat /cfg/base.md $CREPO/CLAUDE.md > /tmp/cm 2>/dev/null && cp /tmp/cm $CREPO/CLAUDE.md"
-  else
-    INJECT="cp /cfg/base.md $CREPO/CLAUDE.md"
-  fi
-fi
+[[ -f "$BASEMD" ]] && cp "$BASEMD" "$CFG/base.md"
+case "$SIDE" in
+  grove)
+    [[ -f "$BASEMD" ]] && INJECT="cat /cfg/base.md $CREPO/CLAUDE.md > /tmp/cm 2>/dev/null && cp /tmp/cm $CREPO/CLAUDE.md" ;;
+  lsp)
+    [[ -f "$LSPSTEER" ]] || { echo "lsp arm needs claude-md/lsp-steering.md (parallel to grove steering)" >&2; exit 2; }
+    cp "$LSPSTEER" "$CFG/lsp-steer.md"
+    if [[ -f "$BASEMD" ]]; then
+      INJECT="cat /cfg/base.md /cfg/lsp-steer.md > /tmp/cm && cp /tmp/cm $CREPO/CLAUDE.md"
+    else
+      INJECT="cp /cfg/lsp-steer.md $CREPO/CLAUDE.md"
+    fi ;;
+  baseline)
+    [[ -f "$BASEMD" ]] && INJECT="cp /cfg/base.md $CREPO/CLAUDE.md" ;;
+esac
 
 MODEL_ARG=(); [[ -n "$MODEL" ]] && MODEL_ARG=(--model "$MODEL")
 

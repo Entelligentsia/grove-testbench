@@ -6,13 +6,28 @@
   ],
   "sides": {
     "L1-baseline-redis": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 61,
+      "context": 126393,
+      "engaged": true,
+      "evidence": "evidence/nav3/L1/raw/redis-L1.claude.baseline.jsonl",
+      "ts": "2026-06-27T07:00:26.049Z"
     },
     "L1-grove-redis": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 108,
+      "context": 300349,
+      "engaged": true,
+      "evidence": "evidence/nav3/L1/raw/redis-L1.claude.grove.jsonl",
+      "ts": "2026-06-27T06:59:01.698Z"
     },
     "L1-lsp-redis": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 76,
+      "context": 213497,
+      "engaged": true,
+      "evidence": "evidence/nav3/L1/raw/redis-L1.claude.lsp.jsonl",
+      "ts": "2026-06-27T07:08:56.090Z"
     },
     "L2-baseline-redis": {
       "status": "pending"
@@ -51,6 +66,44 @@
       "status": "pending"
     }
   },
-  "setup": {},
-  "judge": {}
+  "setup": {
+    "lsp/redis": {
+      "ready": true,
+      "setup_s": 2749,
+      "index_log": "bear-make compile_commands.json(10755L)+clangd .cache(9.5M); verified definition(dictAdd)->src/dict.c:493 line-exact via mcp bridge+seed server.c; setup_s=start->index-complete wall est",
+      "image_digest": "sha256:b99153953bd444cf8bfed721ced8c42868c951dbeb7a6cf8d49d15c6ea9dc180",
+      "ts": "2026-06-27T06:54:55.266Z"
+    }
+  },
+  "judge": {
+    "L1-redis": {
+      "scores": {
+        "baseline": {
+          "grounding": 0.93,
+          "completeness": 1,
+          "verdict": "Full. All 6 spine elements + iskvobj/metabits/kvobj-layout/LFU detail/16-byte packing. Cites resolve (object.h:100-112, 96-98, 188-190; server.h:126 for OBJ_SHARED_INTEGERS). Slightly loose: gave refcount fns as object.h:128-130 (actual 128-129) and listed type constants without pinning server.h:856. Reached this via grep+one Read — cheapest (126k ctx) and fastest (61s)."
+        },
+        "grove": {
+          "grounding": 1,
+          "completeness": 1,
+          "verdict": "Full. All 6 spine + extras. Best-grounded: line-exact and correct everywhere — struct object.h:100, robj typedef 115, encoding constants 75, refcount sentinels 96, and uniquely pinned the type constants at server.h:856 (which the reference key omitted). 8 grove tool calls; highest context (300k) and slowest (108s) of the three."
+        },
+        "lsp": {
+          "grounding": 0.97,
+          "completeness": 1,
+          "verdict": "Full. All 6 spine + extras, strongest prose on the type/encoding contract and kvobj layout. Cites resolve; incrRefCount/decrRefCount given as object.h:128-129 (exact — more precise than the key's 128-130). Did not pin server.h:856 for type constants. 6 mcp__lsp__definition calls; mid context (213k), 76s."
+        }
+      },
+      "key_revisions": [
+        {
+          "level": "L1",
+          "reason": "Spine element 2 (type) located the struct field (object.h:101) but never pinned where the OBJ_STRING/LIST/... type constants are defined. Verified in pinned source: they live in src/server.h:856. grove cited this exactly. Add server.h:856 as the canonical cite for the type-constant values.",
+          "cite": "src/server.h:856",
+          "ts": "2026-06-27"
+        }
+      ],
+      "verdict": "L1-redis: all three arms produce Full answers — every one nails the central type-vs-encoding distinction, refcount sentinels, and LRU/LFU split, with resolvable object.h cites. At this retrieval-difficulty rung answer QUALITY does not separate the tools; the separation is in PROCESS metrics: baseline cheapest+fastest (126k/61s) via grep+read, grove most thorough+best-grounded but priciest (300k/108s, 8 grove calls), lsp in between (213k/76s, 6 semantic definition calls). Note: lsp arm required steering parallel to grove's to engage its tools (see methodology note); without it the agent defaulted to grep.",
+      "ts": "2026-06-27T07:10:29.325Z"
+    }
+  }
 }
