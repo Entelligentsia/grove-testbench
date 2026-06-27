@@ -9,11 +9,13 @@
 # Byte-identical to /home/bench/repos/<name> in the images: same manifest, same
 # fetch-by-sha. .git is KEPT here (host disk is cheap) so we can verify HEAD==sha.
 #
-# Usage: experiment/clone-source.sh [dest-dir]   (default experiment/repos)
+# Usage: experiment/clone-source.sh [--repo NAME] [dest-dir]   (default all, experiment/repos)
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/.." && pwd)"
 manifest="$root/repos.manifest"
+ONLY=""
+if [[ "${1:-}" == "--repo" ]]; then ONLY="$2"; shift 2; fi
 dest="${1:-$here/repos}"
 [[ -f "$manifest" ]] || { echo "missing manifest: $manifest" >&2; exit 1; }
 mkdir -p "$dest"
@@ -21,6 +23,7 @@ mkdir -p "$dest"
 ok=0; fail=0
 while read -r name lang url sha _rest; do
   [[ -z "${name:-}" || "${name:0:1}" == "#" ]] && continue
+  [[ -n "$ONLY" && "$name" != "$ONLY" ]] && continue
   d="$dest/$name"
   # idempotent: skip if already checked out at the pinned sha
   if [[ -d "$d/.git" ]] && [[ "$(git -C "$d" rev-parse HEAD 2>/dev/null)" == "$sha" ]]; then

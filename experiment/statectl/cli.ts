@@ -9,6 +9,7 @@
 //   status [--repo R] [--rung L]  counts by status (+ blocked list)
 //   next                          first runnable pending cell-id in planned order (else empty)
 //   reset <cell>                   clear a cell back to pending (drops metrics) — for re-runs
+//   block <cell> <reason...>      set status=blocked + reason (verify-gate off-ramp)
 //   set-status <cell> <status>    transition a registered cell's status
 //   record <cell> k=v ...         merge typed metric fields into a side (validated)
 //   setup-set <arm>/<repo> k=v    upsert a setup record
@@ -204,6 +205,19 @@ function run() {
       break;
     }
 
+    case "block": {
+      const spine = loadSpine();
+      const id = need(rest[0], "usage: block <cell> <reason...>");
+      parseCell(spine, id);
+      const reason = rest.slice(1).join(" ") || "blocked";
+      const st = loadState();
+      if (!st.sides[id]) fail(`cell '${id}' not registered`);
+      st.sides[id] = { ...st.sides[id], status: "blocked", blocked_reason: reason, ts: now() };
+      saveState(st);
+      console.log(`${id} -> blocked: ${reason}`);
+      break;
+    }
+
     case "set-status": {
       const spine = loadSpine();
       const id = need(rest[0], "usage: set-status <cell> <status>");
@@ -267,7 +281,7 @@ function run() {
 
     default:
       console.log(
-        "usage: statectl <validate|register|status|next|reset|set-status|record|setup-set|judge-set|reconcile>",
+        "usage: statectl <validate|register|status|next|reset|block|set-status|record|setup-set|judge-set|reconcile>",
       );
       process.exit(cmd ? 1 : 0);
   }

@@ -9,31 +9,43 @@
 # the grove image's CLAUDE.md already carries the baked grove block.
 #
 # Usage:
-#   scripts/run-side.sh <scene-id> <repo> <baseline|grove> [--model M] [--out DIR]
-#     [--baseline IMG] [--grove IMG]
+#   scripts/run-side.sh <scene-id> <repo> <baseline|grove|lsp> [--model M] [--out DIR]
+#     [--prompt FILE] [--baseline IMG] [--grove IMG] [--lsp IMG] [--mcp-config FILE]
+#
+#   baseline = grove OFF (empty mcp config)        — text search
+#   grove    = grove ON  (grove mcp config)        — structural
+#   lsp      = LSP bridge (--mcp-config required)   — semantic
+# --prompt overrides the default scenes/<scene>.prompt.txt (the experiment passes
+# experiment/prompts/<repo>/<rung>.txt so genesis stays out of scenes/).
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/.." && pwd)"
 
 SCENE="${1:?usage: run-side.sh <scene> <repo> <side>}"; shift
 REPO="${1:?need repo}"; shift
-SIDE="${1:?need side: baseline|grove}"; shift
-[[ "$SIDE" == baseline || "$SIDE" == grove ]] || { echo "side must be baseline|grove" >&2; exit 2; }
+SIDE="${1:?need side: baseline|grove|lsp}"; shift
+[[ "$SIDE" == baseline || "$SIDE" == grove || "$SIDE" == lsp ]] || { echo "side must be baseline|grove|lsp" >&2; exit 2; }
 
 MODEL=""
 OUT="$root/out/l4"
 BASE_IMG="grove-testbench/base:latest"
 GROVE_IMG="grove-testbench/grove:v0.1.8"
+LSP_IMG="grove-testbench/lsp:latest"
+MCP_CONFIG=""        # required for lsp: the per-repo MCP->LSP bridge config
+PROMPT_OVERRIDE=""
 while [[ $# -gt 0 ]]; do case "$1" in
-  --model)    MODEL="$2"; shift 2 ;;
-  --out)      OUT="$2"; shift 2 ;;
-  --baseline) BASE_IMG="$2"; shift 2 ;;
-  --grove)    GROVE_IMG="$2"; shift 2 ;;
+  --model)      MODEL="$2"; shift 2 ;;
+  --out)        OUT="$2"; shift 2 ;;
+  --prompt)     PROMPT_OVERRIDE="$2"; shift 2 ;;
+  --baseline)   BASE_IMG="$2"; shift 2 ;;
+  --grove)      GROVE_IMG="$2"; shift 2 ;;
+  --lsp)        LSP_IMG="$2"; shift 2 ;;
+  --mcp-config) MCP_CONFIG="$2"; shift 2 ;;
   *) echo "unknown flag: $1" >&2; exit 2 ;; esac; done
 
 command -v jq  >/dev/null || { echo "jq required" >&2; exit 1; }
 command -v docker >/dev/null || { echo "docker required" >&2; exit 1; }
-PROMPT_FILE="$root/scenes/$SCENE.prompt.txt"
+PROMPT_FILE="${PROMPT_OVERRIDE:-$root/scenes/$SCENE.prompt.txt}"
 [[ -f "$PROMPT_FILE" ]] || { echo "missing prompt: $PROMPT_FILE" >&2; exit 2; }
 CREDS="${CLAUDE_CREDS:-$HOME/.claude/.credentials.json}"
 [[ -f "$CREDS" ]] || { echo "missing creds: $CREDS" >&2; exit 1; }
@@ -56,8 +68,13 @@ printf '{ "mcpServers": { "grove": { "command": "grove", "args": ["serve"] } } }
 DOTCLAUDE="$CFG/dotclaude"; mkdir -p "$DOTCLAUDE"; chmod 0777 "$DOTCLAUDE"
 install -m 0644 "$CREDS" "$DOTCLAUDE/.credentials.json"
 
-IMG="$BASE_IMG"; CFGNAME=empty-mcp.json
-[[ "$SIDE" == grove ]] && { IMG="$GROVE_IMG"; CFGNAME=grove-mcp.json; }
+case "$SIDE" in
+  baseline) IMG="$BASE_IMG";  CFGNAME=empty-mcp.json ;;
+  grove)    IMG="$GROVE_IMG"; CFGNAME=grove-mcp.json ;;
+  lsp)      IMG="$LSP_IMG";   CFGNAME=lsp-mcp.json
+            [[ -n "$MCP_CONFIG" && -f "$MCP_CONFIG" ]] || { echo "lsp arm needs --mcp-config <bridge config file>" >&2; exit 2; }
+            cp "$MCP_CONFIG" "$CFG/lsp-mcp.json" ;;
+esac
 CREPO="/home/bench/repos/$REPO"
 OUTFILE="$OUT/$SCENE.claude.$SIDE.jsonl"
 
@@ -76,7 +93,8 @@ fi
 
 MODEL_ARG=(); [[ -n "$MODEL" ]] && MODEL_ARG=(--model "$MODEL")
 
-echo "=== $SCENE / $SIDE (grove $([[ $SIDE == grove ]] && echo ON || echo OFF)) — $IMG ==="
+echo "=== $SCENE / arm=$SIDE — $IMG ==="
+echo "    prompt: $PROMPT_FILE"
 echo "    repo dir: $CREPO   out: $OUTFILE"
 
 docker run --rm \
