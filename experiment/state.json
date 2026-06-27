@@ -16,11 +16,11 @@
     },
     "L1-grove-redis": {
       "status": "harvested",
-      "run_wall_s": 71,
-      "context": 275201,
+      "run_wall_s": 84,
+      "context": 267978,
       "engaged": true,
       "evidence": "evidence/nav3/L1/raw/redis-L1.claude.grove.jsonl",
-      "ts": "2026-06-27T10:23:13.208Z"
+      "ts": "2026-06-27T16:48:52.588Z"
     },
     "L1-lsp-redis": {
       "status": "harvested",
@@ -49,13 +49,28 @@
       "status": "pending"
     },
     "L4-baseline-redis": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 113,
+      "context": 309894,
+      "engaged": true,
+      "evidence": "evidence/nav3/L4/raw/redis-L4.claude.baseline.jsonl",
+      "ts": "2026-06-27T15:35:20.457Z"
     },
     "L4-grove-redis": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 119,
+      "context": 359299,
+      "engaged": true,
+      "evidence": "evidence/nav3/L4/raw/redis-L4.claude.grove.jsonl",
+      "ts": "2026-06-27T16:44:10.193Z"
     },
     "L4-lsp-redis": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 153,
+      "context": 566133,
+      "engaged": true,
+      "evidence": "evidence/nav3/L4/raw/redis-L4.claude.lsp.jsonl",
+      "ts": "2026-06-27T15:38:33.760Z"
     },
     "L5-baseline-redis": {
       "status": "harvested",
@@ -67,11 +82,11 @@
     },
     "L5-grove-redis": {
       "status": "harvested",
-      "run_wall_s": 134,
-      "context": 299865,
+      "run_wall_s": 189,
+      "context": 387167,
       "engaged": true,
       "evidence": "evidence/nav3/L5/raw/redis-L5.claude.grove.jsonl",
-      "ts": "2026-06-27T11:19:41.576Z"
+      "ts": "2026-06-27T16:52:04.688Z"
     },
     "L5-lsp-redis": {
       "status": "harvested",
@@ -91,11 +106,11 @@
     },
     "L1-grove-django": {
       "status": "harvested",
-      "run_wall_s": 44,
-      "context": 103084,
+      "run_wall_s": 65,
+      "context": 101968,
       "engaged": true,
       "evidence": "evidence/nav3/L1/raw/django-L1.claude.grove.jsonl",
-      "ts": "2026-06-27T10:03:43.899Z"
+      "ts": "2026-06-27T16:53:22.490Z"
     },
     "L1-lsp-django": {
       "status": "harvested",
@@ -142,11 +157,11 @@
     },
     "L5-grove-django": {
       "status": "harvested",
-      "run_wall_s": 138,
-      "context": 475687,
+      "run_wall_s": 143,
+      "context": 515693,
       "engaged": true,
       "evidence": "evidence/nav3/L5/raw/django-L5.claude.grove.jsonl",
-      "ts": "2026-06-27T11:36:40.659Z"
+      "ts": "2026-06-27T16:55:49.596Z"
     },
     "L5-lsp-django": {
       "status": "harvested",
@@ -175,9 +190,9 @@
           "verdict": "Full. Identifies struct redisObject/robj at object.h:100-112, nails the type-vs-encoding distinction, and covers all 6 spine fields plus iskvobj/metabits/kvobj extras. Cites resolve well (object.h:96-98 for refcount sentinels is slightly loose since 98 is OBJ_FIRST_SPECIAL, and objectSetLRUOrLFU is at 189 not 188-190), but server.h:126 OBJ_SHARED_INTEGERS and kvobjGetAllocPtr@194 confirm. Used grep then a full Read."
         },
         "grove": {
-          "grounding": 0.97,
+          "grounding": 1,
           "completeness": 1,
-          "verdict": "Full. Cleanly locates object.h:100 via grove symbol/source tools, gives the robj+kvobj typedefs, encoding constants 75-88, and all 6 spine fields with the type-vs-encoding distinction front and center. Cites are tight and resolve (minor: incr/decrRefCount given as 129-130 when decr is at 128). Strongest structured navigation."
+          "verdict": "(grove v0.1.11 re-run) Full. All 6 spine elements: struct redisObject/robj at object.h:100, type:4(101), encoding:4(102) with a clear logical-vs-representation distinction, refcount with both sentinels (OBJ_SHARED/STATIC_REFCOUNT), lru with LRU/LFU dual-meaning, ptr as payload, plus credited extras (iskvobj, metabits, kvobj). Reproduced struct verbatim-accurate to object.h:100-112; encoding constants 0-13 match object.h:75-88; the explicit cite object.h:100 resolves exact and OBJ_REFCOUNT_BITS=23(95), LRU_BITS=24(90), sentinels(96-97) all check out. No loose cites."
         },
         "lsp": {
           "grounding": 0.95,
@@ -187,7 +202,7 @@
       },
       "key_revisions": [],
       "verdict": "All three arms scored Full on completeness with strong grounding — each correctly centered the type (logical) vs encoding (concrete) distinction and covered refcount, lru, ptr, and the kvobj extras. Grove was marginally tightest on citations via its structural tools; baseline and LSP both reached the same answer via grep+Read, with LSP notable for recovering gracefully after its index failed to warm.",
-      "ts": "2026-06-27T11:52:20.936Z"
+      "ts": "2026-06-27T17:12:30.752Z"
     },
     "L1-django": {
       "scores": {
@@ -197,9 +212,9 @@
           "verdict": "Cites class:34, _func_path 64-71, view_name 73-74, namespace filtering at lines 59/61 — all resolve correctly in source. Covers every spine element: func, args/kwargs with the captured/extra split, url_name/route, both namespace axes, view_name, and the __getitem__ triple consumed by the base handler."
         },
         "grove": {
-          "grounding": 0.8,
+          "grounding": 1,
           "completeness": 1,
-          "verdict": "Content is fully accurate and the one explicit cite (class at :34) is correct, with code excerpts matching source verbatim, but it provides few per-attribute line numbers. Hits all required-spine elements including the captured/extra split, dual namespace stacks, view_name, the triple, plus __reduce_ex__ PicklingError."
+          "verdict": "(grove v0.1.11 re-run) Full. Nails all 6 spine pieces: class ResolverMatch (resolvers.py:34, exact), func, args/kwargs + captured_kwargs/extra_kwargs split, url_name/route, the full namespacing chain (app_names/app_name, namespaces/namespace, view_name from namespaces + _func_path), and __getitem__ (func,args,kwargs) with the base.py dispatch contract. The lone numbered cite (resolvers.py:34) lands exactly on `class ResolverMatch:`; the three verbatim blocks reproduce lines 64-77 faithfully; base.py resolve_request unpacks the triple at 183/237. Light on explicit line numbers beyond 34, but every quoted construct verifies — grounding by cite-accuracy is exact (up from 0.80 on the v0.1.9 run, which was penalized for cite density)."
         },
         "lsp": {
           "grounding": 1,
@@ -209,7 +224,7 @@
       },
       "key_revisions": [],
       "verdict": "All three arms correctly identify ResolverMatch and hit the full required spine with no factual errors. LSP edges out on grounding with the most numerous and exactly-correct line citations, baseline is close behind with accurate range cites, and grove is equally complete in content but offers the fewest explicit line numbers.",
-      "ts": "2026-06-27T11:52:21.652Z"
+      "ts": "2026-06-27T17:12:32.164Z"
     },
     "L5-redis": {
       "scores": {
@@ -219,9 +234,9 @@
           "verdict": "Traces the full cross-cutting path: dirty-delta detection in call, deferred alsoPropagate into server.also_propagate, the afterCommand->postExec->propagatePendingCommands flush with MULTI/EXEC wrapping, propagateNow split to AOF/replicationFeedSlaves, and RESP encoding into the shared repl buffer, even extending to per-replica socket write. Cites mostly resolve (3978, 4032, 4127-4154, 3732, 3811, 3867, 3704, 631, server.h:1802, networking 2734 all correct); a few are loose (setGenericCommand labeled t_string.c:190 which is the server.dirty++ line, and putClientInPendingWriteQueue tied to networking.c:275 which is the write-handler-install region)."
         },
         "grove": {
-          "grounding": 0.98,
+          "grounding": 1,
           "completeness": 1,
-          "verdict": "Hits all six spine elements with the queue-then-flush indirection made explicit, and every sampled cite resolves exactly (call 3949, propagateNow 3704, alsoPropagate 3732, afterCommand 4271, postExec 3867, propagatePendingCommands 3811, replicationFeedSlaves 631, feedReplicationBuffer 618, replBufWriter Begin/Append/End 466/533/565, prepareReplicasToWrite 363, shouldPropagate 3673). Cleanest grounding of the three and correctly bridges the propagation and transport subsystems."
+          "verdict": "(grove v0.1.11 re-run) Full. All 6 spine elements connected — proc-in-call (server.c:3949/4015), dirty detection (3978/4032), deferred alsoPropagate into also_propagate (queue-then-flush made explicit), afterCommand(4271)->postExec->propagatePendingCommands(3811)->propagateNow(3704) flush bridge, fan-out replicationFeedSlaves(3716), RESP/SELECT-injection into the repl buffer (replication.c:631). Every sampled cite exact: call 3949, alsoPropagate 3732, shouldPropagate 3673, propagatePendingCommands 3811, afterCommand 4271, propagateNow 3704, replicationFeedSlaves replication.c:631, prepareReplicasToWrite 363, replBufWriterEnd 565, _writeToClientSlave networking.c:2734 — no loose lines. Tightest grounding of the redis cells."
         },
         "lsp": {
           "grounding": 0.93,
@@ -231,7 +246,7 @@
       },
       "key_revisions": [],
       "verdict": "All three arms reached Full: each traced proc->dirty-detection->deferred alsoPropagate->afterCommand/postExec/propagatePendingCommands flush->propagateNow->replicationFeedSlaves/feedReplicationBuffer and explicitly named the queue-then-flush indirection that is the crux. Grove had the tightest grounding (every cite exact), LSP nearly as good with a couple of approximate line ranges, and baseline was equally complete (going furthest into the per-replica socket-write path) but carried two slightly loose citations.",
-      "ts": "2026-06-27T11:52:22.381Z"
+      "ts": "2026-06-27T17:12:31.462Z"
     },
     "L5-django": {
       "scores": {
@@ -243,7 +258,7 @@
         "grove": {
           "grounding": 1,
           "completeness": 1,
-          "verdict": "Complete trace of all six spine elements including the update-vs-insert decision, both compiler paths, and the updated->created invariant feeding post_save. All cites (incl. compiler.py:2135 execute_returning_sql and 2037 as_sql) verified correct. Signals described accurately but exact line numbers for pre_save/post_save not cited."
+          "verdict": "(grove v0.1.11 re-run) Full. All 6 spine elements connected — save (base.py:841) -> save_base(950) with pre_save/post_save (created=not updated), _save_table update-first/insert-fallback (1069 -> _do_update 1140 -> if not updated 1157 -> _do_insert 1199), hand-off through _do_insert(1246)/manager._insert(1251)/QuerySet._insert(query.py:2112) and the _update mirror (query.py:1428), down to SQLInsertCompiler.execute_sql(compiler.py:1925)->cursor.execute(1936), with _assign_returned_values(1259) feeding updated/created back up. Every sampled cite exact (base.py 841/950/976/1069/1140/1157/1199/1246/1251/1259, query.py 1428/2112, compiler.py 1801/1925/1936/2037/2114); class boundaries confirm insert vs update compiler split. No loose lines."
         },
         "lsp": {
           "grounding": 1,
@@ -253,7 +268,29 @@
       },
       "key_revisions": [],
       "verdict": "All three arms produced Full answers tracing the entire cross-cutting write path with grounding that checks out against the pinned source. LSP is marginally the most precise (it cites the exact pre_save signal line and the base execute_sql), while baseline and grove describe the signals correctly but cite fewer exact signal line numbers; the difference is cosmetic since all hit every required spine element.",
-      "ts": "2026-06-27T11:52:23.109Z"
+      "ts": "2026-06-27T17:12:32.876Z"
+    },
+    "L4-redis": {
+      "scores": {
+        "baseline": {
+          "grounding": 0.98,
+          "completeness": 1,
+          "verdict": "Full. All four spine pieces — launch/fork (bgsaveCommand rdb.c:4833, rdbSaveBackground rdb.c:2070, redisFork server.c:7428, openChildInfoPipe childinfo.c:25), child write (rdbSave rdb.c:2027, atomic rename rdb.c:2041), the childinfo progress pipe (sendChildInfoGeneric childinfo.c:49, receiveChildInfo childinfo.c:150 called from cron server.c:1694), and parent reap+finalize (checkChildrenDone server.c:1416 -> backgroundSaveDoneHandler rdb.c:4605 -> Disk rdb.c:4544, updateSlavesWaitingBgsave rdb.c:4628). Best-grounded on the progress mechanism: cited the throttle block rdb.c:1855 and described the 1024-key & >=1s gate before sendChildInfo exactly as in source. Every sampled cite resolves exact; also nailed the dirty -= dirty_before_bgsave bookkeeping and SIGUSR1 clean-abort. Reached this on 19 turns / 310k context — cheapest arm."
+        },
+        "grove": {
+          "grounding": 0.98,
+          "completeness": 1,
+          "verdict": "Full (re-run on grove v0.1.11, the shipped route-by-task steering — image grove-testbench/grove:v0.1.11, baked block). All four spine pieces: launch/fork (bgsaveCommand rdb.c:4833, rdbSaveBackground rdb.c:2070, redisFork server.c:7428, openChildInfoPipe childinfo.c:25), child write (rdbSave rdb.c:2027 -> rdbSaveInternal rdb.c:1956 -> rdbSaveRio rdb.c:1880), progress pipe (sendChildInfoGeneric childinfo.c:49), and reap+finalize (checkChildrenDone server.c:1416 @cron 1695 -> backgroundSaveDoneHandler rdb.c:4605 / Disk rdb.c:4544). Every sampled cite resolves exact. This run navigated pure-grove (21 grove calls, no shell) but far leaner than the pre-steering rigid run (36 source calls): 359k context vs 560k. The route-by-task steering's win holds whether or not the model combines on a given run — fewer, better-targeted grove calls via map/breadth-control. (Prior records: rigid v0.1.10 baked = 560k/36-grove; host-injected new steering = 329k/20-grove+3-grep+2-read. n=1 each; stochastic on whether it combines, consistent ~330-360k band.)"
+        },
+        "lsp": {
+          "grounding": 0.97,
+          "completeness": 1,
+          "verdict": "Full. All four pieces with good structural depth on the child write path (rdbSave rdb.c:2027 -> rdbSaveInternal rdb.c:1956 -> rdbSaveRio, temp file rdb.c:2032, atomic rename rdb.c:2041, rio/incremental-fsync detail), the childinfo pipe (sendChildInfoGeneric childinfo.c:49, receiveChildInfo childinfo.c:150), and reap+finalize (serverCron server.c:1692, checkChildrenDone server.c:1416, backgroundSaveDoneHandler rdb.c:4605/Disk rdb.c:4544, dispatcher post-handler rdb.c:4622). Every cite in the answer resolves exact; leaned on a couple of grep/Read anchors mid-trace and carried one fewer distinct childinfo-helper line than baseline. 566k context / 29 turns."
+        }
+      },
+      "key_revisions": [],
+      "verdict": "All three arms reached Full on every spine piece — launch/fork, child rdbSave, the childinfo progress pipe, and parent reap+finalize (checkChildrenDone -> backgroundSaveDoneHandler -> Disk) — each connecting the fork+copy-on-write rationale for non-blocking and the dirty_before_bgsave bookkeeping. This is the cleanest-grounded cell measured: every sampled citation from all three arms resolves exactly against the pinned source (grounding 0.97-0.98, a near-tie). The differentiator is COST, and it inverts L5-redis: on this bounded 3-file subsystem (rdb.c/server.c/childinfo.c) baseline's targeted grep+Read was both fully correct and the CHEAPEST (310k context / 19 turns), while grove (560k / 38) and lsp (566k / 29) fanned out across many symbols for ~1.8x the context to reach the same Full answer. Baseline was also the most precise on the progress-pipe throttle (rdb.c:1855, 1024-key & >=1s gate).",
+      "ts": "2026-06-27T16:44:54.114Z"
     }
   }
 }

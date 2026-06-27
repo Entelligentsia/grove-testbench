@@ -1,172 +1,231 @@
 # transcript: I'm planning a change to how persisting a model instance interacts with the database, so I need to understand the full journey of saving a single object. Sta...
 
 
-💬 Let me load the grove tools and start mapping the save flow.
-  ▸ ToolSearch(select:mcp__grove__outline,mcp__grove__symbols,mcp__grove__source,mcp__grove__callers,mcp__grove__definition,mcp__grove__map)
+💬 I'll trace this through the ORM using grove's structural tools. Let me load them and start from the `Model` class.
+  ▸ ToolSearch(select:mcp__grove__outline,mcp__grove__symbols,mcp__grove__source,mcp__grove__callers,mcp__grove__definition)
 
-💬 Now let me outline the model base file and find the key save-related methods.
+💬 Now let me outline the model base file and pull the key methods in parallel.
   ▸ mcp__grove__outline({"file":"django/db/models/base.py","kind":"method","detail":0})
-  ▸ ToolSearch(select:mcp__grove__outline,mcp__grove__symbols,mcp__grove__source,mcp__grove__map,mcp__grove__definition,mcp__grove__callers)
+  ▸ mcp__grove__symbols({"dir":"django/db/models","name":"save_base","kind":"method"})
+  ▸ ToolSearch(select:mcp__grove__outline,mcp__grove__symbols,mcp__grove__source,mcp__grove__map)
+
+💬 Now let me pull the save-related methods from `base.py` and map the SQL compiler directory simultaneously.
+  ▸ mcp__grove__map({"dir":"django/db/models","name":"save_base","nameContains":true})
   ▸ mcp__grove__outline({"file":"django/db/models/base.py","kind":"method","detail":1})
-  ▸ mcp__grove__symbols({"dir":"django/db/models","name":"save","kind":"method"})
-  ▸ mcp__grove__map({"dir":"django/db/models","name":"save"})
 
-💬 Found the entry point. Now let me read all the key stages in parallel.
-  ▸ mcp__grove__source({"id":"python:django/db/models/base.py#save@841"})
-  ▸ mcp__grove__map({"dir":"django/db/models","name":"save_base"})
-  ▸ mcp__grove__map({"dir":"django/db/models","nameContains":true,"name":"_do_insert"})
+💬 Let me read the key methods directly since outline returned empty.
+  ▸ mcp__grove__source({"file":"django/db/models/base.py","name":"save"})
   ▸ mcp__grove__source({"id":"python:django/db/models/base.py#save_base@950"})
-  ▸ mcp__grove__map({"dir":"django/db/models","name":"_save_table"})
-  ▸ mcp__grove__map({"dir":"django/db/models","name":"_do_update"})
-  ▸ mcp__grove__source({"id":"python:django/db/models/base.py#_save_table@1069"})
-  ▸ mcp__grove__source({"id":"python:django/db/models/base.py#_do_update@1206"})
-  ▸ mcp__grove__source({"id":"python:django/db/models/base.py#_do_insert@1246"})
 
-💬 Now let me find the `_update` and `_insert` methods on QuerySet/manager, and the SQL compiler that executes them.
-  ▸ mcp__grove__map({"dir":"django/db/models","name":"_update"})
-  ▸ mcp__grove__map({"dir":"django/db/models","name":"_insert"})
+💬 Good. Now I need `_save_table` (the update-vs-insert branch) and then the SQL layer.
+  ▸ mcp__grove__source({"file":"django/db/models/base.py","name":"_save_table"})
+  ▸ mcp__grove__source({"file":"django/db/models/base.py","name":"_do_update"})
+
+💬 Now let me trace `_do_insert` and `QuerySet._update` to hit the SQL layer.
+  ▸ mcp__grove__source({"file":"django/db/models/base.py","name":"_do_insert"})
+  ▸ mcp__grove__map({"dir":"django/db/models","name":"_update","nameContains":false})
   ▸ mcp__grove__source({"id":"python:django/db/models/query.py#_update@1428"})
+  ▸ mcp__grove__map({"dir":"django/db/models","name":"_insert"})
   ▸ mcp__grove__source({"id":"python:django/db/models/query.py#_insert@2112"})
 
-💬 Now let me look at the SQL compiler layer — how `InsertQuery` and `UpdateQuery` become actual SQL.
-  ▸ mcp__grove__map({"dir":"django/db/models/sql","name":"execute_sql"})
-  ▸ mcp__grove__map({"dir":"django/db/models/sql","name":"as_sql","kind":"method"})
-  ▸ mcp__grove__map({"dir":"django/db/models/sql","nameContains":true,"name":"as_sql"})
+💬 Now let me look at the SQL compiler layer — the `execute_sql` methods for both INSERT and UPDATE compilers.
+  ▸ mcp__grove__map({"dir":"django/db/models/sql","kind":"method","name":"execute_sql"})
+  ▸ mcp__grove__outline({"file":"django/db/models/sql/compiler.py","kind":"class","detail":0})
+
+💬 Good. Now let me read the key methods from both compilers in parallel.
+  ▸ mcp__grove__source({"file":"django/db/models/sql/compiler.py","name":"execute_sql"})
+  ▸ mcp__grove__outline({"file":"django/db/models/sql/compiler.py","kind":"method","detail":1})
   ▸ mcp__grove__source({"id":"python:django/db/models/sql/compiler.py#execute_sql@1925"})
   ▸ mcp__grove__source({"id":"python:django/db/models/sql/compiler.py#execute_sql@2114"})
 
-💬 Now let me grab the `execute_returning_sql` method and the insert/update `as_sql` bodies to complete the picture.
-  ▸ mcp__grove__map({"dir":"django/db/models/sql","name":"execute_returning_sql"})
+💬 Now let me get the `as_sql` methods for both INSERT and UPDATE compilers.
+  ▸ mcp__grove__source({"file":"django/db/models/sql/compiler.py","name":"as_sql"})
+  ▸ mcp__grove__source({"id":"python:django/db/models/sql/compiler.py#as_sql@1801"})
   ▸ mcp__grove__source({"id":"python:django/db/models/sql/compiler.py#as_sql@2037"})
 
-💬 I have the complete picture. Here is the full journey from `Model.save()` to `cursor.execute()`.  ---  ## The four stages of a Django model save  ### Stage 1...
+💬 I have all the pieces. Let me also quickly check `execute_returning_sql` since `_update` can call it.
+  ▸ mcp__grove__source({"file":"django/db/models/sql/compiler.py","name":"execute_returning_sql"})
 
-──────── RESULT (success, 135809ms, 27 turns) ────────
-I have the complete picture. Here is the full journey from `Model.save()` to `cursor.execute()`.
+💬 Here is the full journey, stage by stage, with the exact file locations where each transition happens.  ---  ## Stage 1 — `Model.save()` — public entry point...
 
----
-
-## The four stages of a Django model save
-
-### Stage 1 — `Model.save()` (`base.py:841`): public entry point & pre-flight
-
-This is the only method callers touch. Before handing off, it does three things:
-
-1. **`_prepare_related_fields_for_save()`** — walks every FK/O2O field and ensures that any related instance has been saved first (or that the raw FK id column is set), raising errors otherwise.
-2. **Database routing** — picks the alias with `router.db_for_write()`, defaulting to whatever `using` the caller supplied.
-3. **`update_fields` resolution** — if the object is *deferred* (some fields were never loaded into `self.__dict__`) and no `force_insert` is set, it computes a `frozenset` of only the loaded concrete fields and passes that down as `update_fields`, so the UPDATE doesn't wipe columns that were never fetched.
-
-Everything then flows into `save_base()`.
+──────── RESULT (success, 142364ms, 26 turns) ────────
+Here is the full journey, stage by stage, with the exact file locations where each transition happens.
 
 ---
 
-### Stage 2 — `Model.save_base()` (`base.py:950`): once-per-save lifecycle bookkeeping
+## Stage 1 — `Model.save()` — public entry point (`base.py:841`)
 
-This is the layer that fires lifecycle signals and wraps everything in a transaction. The key steps:
+This method is the only thing a caller touches. Before doing anything persistent it:
 
-1. **Proxy stripping** — if the current class is a proxy model the concrete model is used for the actual DB work, but `origin` keeps the proxy class (so signals carry the proxy as `sender`).
-2. **`pre_save` signal** — fired on `origin` before any DB work, passing `raw`, `using`, and `update_fields`.
-3. **Transaction context**:
-   - Multi-table inheritance (`meta.parents` is non-empty): `transaction.atomic(savepoint=False)` so parent-table INSERTs and the child-table INSERT/UPDATE are one unit.
-   - Simple single-table model: `mark_for_rollback_on_error`, which is cheaper (no savepoint).
-4. **Parent saves** — in non-raw mode, `_validate_force_insert()` then `_save_parents()` recursively upserts each ancestor table row (for MTI). Whether this resulted in a fresh INSERT is passed down as `parent_inserted`.
-5. **`_save_table()`** — the actual row work (stage 3).
-6. **State update** — `self._state.db = using` and `self._state.adding = False`.
-7. **`post_save` signal** — fired with `created=(not updated)` so receivers know whether this was an INSERT or an UPDATE.
+1. Calls `_prepare_related_fields_for_save()` — validates that FK/O2O fields point to saved objects.
+2. Resolves the `using` alias via `router.db_for_write()` (the database router decides which connection to target).
+3. Validates the `force_insert`/`force_update`/`update_fields` combination — mutually exclusive flags are caught here, not deeper.
+4. Handles the **deferred-field shortcut**: if the instance was loaded with `.defer()` or `.only()` and you're saving back to the same DB, it auto-promotes to `update_fields` covering only the loaded (non-deferred) fields, so you never accidentally blank out columns you never fetched.
+5. Hands off to `save_base()`.
 
 ---
 
-### Stage 3 — `Model._save_table()` (`base.py:1069`): INSERT-vs-UPDATE decision
+## Stage 2 — `Model.save_base()` — once-per-save bookkeeping (`base.py:950`)
 
-This is where the branching logic lives. It operates on a single concrete table.
+This is the single layer that wraps the full save in lifecycle infrastructure. It runs exactly once per logical save, even for models with parent tables (which `_save_parents` will recurse into separately).
 
-**First**, it resolves the PK:
-- If the PK is not yet set, it tries `get_pk_value_on_save()` (e.g. a UUID with a `default`).
+**Key actions in order:**
 
-**Fast-path to INSERT** — if `_state.adding` is `True` *and* every PK field has a `default` or `has_db_default`, it sets `force_insert = True` without attempting an UPDATE, avoiding a wasted round-trip.
-
-**UPDATE attempt** — if the PK is set and we're not forcing an INSERT:
-- Calls `field.pre_save(self, False)` (the `False` means "not adding") on every non-PK, non-generated field to give fields a chance to modify their value (e.g. `DateTimeField(auto_now=True)`).
-- Builds `returning_fields` — generated columns that depend on the fields being updated, plus any expression values that need to be read back.
-- Hands off to `_do_update()`.
-- If `_do_update()` returns a non-empty list, the UPDATE matched a row — record success and assign any returned values to the instance.
-- If the UPDATE matched nothing and either `force_update` or `update_fields` was set, raises `Model.NotUpdated`.
-
-**INSERT path** — reached if the UPDATE attempt returned empty (row didn't exist yet) or if the PK was never set:
-- Optionally queries for the `_order` counter value if `order_with_respect_to` is configured.
-- Builds `insert_fields` (all local concrete non-generated fields, excluding the auto-field when no PK was set) and `returning_fields` (all `db_returning` columns, plus expression fields).
-- Calls `_do_insert()`.
-- Assigns any returned values (e.g. the newly generated PK) back onto the instance.
+- Resolves the proxy chain: if `cls` is a proxy model, walks up to the concrete model for meta lookups, but keeps `origin` pointing at the proxy so signals are sent with the right sender.
+- **Sends `pre_save` signal** (`pre_save.send(sender=origin, instance=self, raw=raw, using=using, update_fields=update_fields)`) — this is where `DateTimeField(auto_now=True)` hooks fire, and where user signal handlers run.
+- Wraps in the appropriate transaction context:
+  - Multi-table inheritance → `transaction.atomic(savepoint=False)` because multiple `INSERT`s must be atomic.
+  - Single table → `transaction.mark_for_rollback_on_error()` (lighter; just ensures the connection is marked bad on exception, no savepoint overhead).
+- Calls `_save_parents()` if not `raw` — recursively saves parent model rows for MTI before saving the child row.
+- Calls `_save_table()` to do the actual row work.
+- After the context manager exits, stamps `self._state.db = using` and `self._state.adding = False`.
+- **Sends `post_save` signal** with `created=(not updated)`.
 
 ---
 
-### Stage 4 — SQL compilation and execution
+## Stage 3 — `Model._save_table()` — update-vs-insert decision (`base.py:1069`)
 
-#### UPDATE path
+This is where the branch is taken. The logic is:
 
-**`Model._do_update()` (`base.py:1206`)**
-Wraps the QuerySet to `filter(pk=pk_val)` and calls `qs._update(values, returning_fields)`.
+```
+pk_set = self._is_pk_set()
 
-There is one special case: if `Meta.select_on_save` is set, it does an `EXISTS` check first so it can distinguish "row not found" from "row found but UPDATE returned 0 due to a database quirk."
+if (not raw and not force_insert and not force_update
+        and self._state.adding
+        and all pk fields have a default):
+    force_insert = True          # skip UPDATE attempt entirely
 
-**`QuerySet._update()` (`query.py:1428`)**
-Chains a new `sql.UpdateQuery` off the existing queryset, calls `add_update_fields(values)` to register the (field, model, value) triples, then asks for a compiler:
-- No returning fields → `compiler.execute_sql(ROW_COUNT)`
-- Returning fields → `compiler.execute_returning_sql(returning_fields)`
+if pk_set and not force_insert:
+    → try UPDATE first (_do_update)
+    if rows matched → updated = True, done
+    elif force_update/update_fields → raise NotUpdated
+    # else: fall through to INSERT
 
-**`SQLUpdateCompiler.as_sql()` (`compiler.py:2037`)**
-Iterates the `(field, model, val)` triples. For each:
-- Expressions: calls `val.resolve_expression(query, for_save=True)` then `compile(val)`.
-- Related-model instances: calls `val.prepare_database_save(field)`.
-- Plain values: calls `field.get_db_prep_save(val, connection=...)`.
+if not updated:
+    → INSERT (_do_insert)
+```
 
-Assembles `UPDATE table SET col = %s, ... WHERE pk = %s`, optionally appending a `RETURNING ...` clause if the backend supports it.
+The **primary signal** is `self._state.adding` — set `True` when an object is freshly constructed (`Model.__init__` sets it), cleared to `False` after the first successful save. So a round-trip through the database flips it, and subsequent saves go straight to UPDATE.
 
-**`SQLUpdateCompiler.execute_returning_sql()` (`compiler.py:2135`)**
-Opens a cursor, runs `cursor.execute(sql, params)`, fetches the returned rows via `connection.ops.fetch_returned_rows()`, applies field converters, and returns the row list. `execute_sql(ROW_COUNT)` takes a simpler path and just returns the affected row count.
+**Before calling `_do_update`**, the method:
+- Calls `f.pre_save(self, False)` on every non-PK concrete field (this is where `auto_now`, `auto_now_add`, and custom field hooks run for the UPDATE path).
+- Collects `returning_fields` — generated columns whose inputs are being updated, or any field holding an expression value that the DB computes.
 
----
-
-#### INSERT path
-
-**`Model._do_insert()` (`base.py:1246`)**
-A thin wrapper: calls `manager._insert([self], fields=..., returning_fields=..., using=..., raw=...)`.
-
-**`QuerySet._insert()` (`query.py:2112`)**
-Creates a fresh `sql.InsertQuery`, calls `insert_values(fields, objs, raw=raw)` to load the row data, then calls `query.get_compiler(using).execute_sql(returning_fields)`.
-
-**`SQLInsertCompiler.as_sql()` (`compiler.py:1801`)**
-Builds the `INSERT INTO table (col, ...) VALUES (%s, ...)` string. Calls `field.pre_save(self, add=True)` for each field (note: add=True this time), calls `field.get_db_prep_save()` on each value, and appends an `ON CONFLICT` suffix and/or `RETURNING` clause when the backend and `on_conflict` settings support them.
-
-**`SQLInsertCompiler.execute_sql()` (`compiler.py:1925`)**
-Opens a cursor and calls `cursor.execute(sql, params)` for each SQL statement from `as_sql()`. Then retrieves the generated PK one of three ways depending on backend capabilities:
-- `can_return_columns_from_insert` (Postgres, etc.): reads the `RETURNING` rows directly.
-- `last_insert_id()`: asks the connection for the auto-increment ID (SQLite, MySQL).
-- Neither: returns an empty list (caller must have supplied the PK explicitly).
-
-Applies field converters and returns the row list back up to `_save_table`, which writes the values (e.g. the new PK) onto `self`.
+**Before calling `_do_insert`**, the method:
+- Optionally computes `_order` (for `order_with_respect_to` models) via an aggregate query.
+- Calls `f.pre_save(self, add=True)` on insert fields.
+- Decides whether to include each field in `returning_fields` based on backend capability (`can_return_columns_from_insert`).
 
 ---
 
-## How the stages connect
+## Stage 4 — `Model._do_update()` / `Model._do_insert()` — delegation (`base.py:1206`, `1246`)
+
+These are thin adapter methods that cross from the model layer into the QuerySet/SQL layer.
+
+**`_do_update`** (`base.py:1206`):
+- Builds `base_qs.filter(pk=pk_val)` — a `QuerySet` scoped to this exact row.
+- If `select_on_save` is set (an opt-in Meta flag for pathological multi-writer situations), it does a `filtered.exists()` check first, then calls `filtered._update(values, returning_fields)`.
+- Otherwise goes straight to `filtered._update(values, returning_fields)`.
+- Returns a list of result tuples (empty → no row matched → triggers INSERT fallback or `NotUpdated`).
+
+**`_do_insert`** (`base.py:1246`):
+- Calls `manager._insert([self], fields=fields, returning_fields=..., using=using, raw=raw)`.
+
+---
+
+## Stage 5 — `QuerySet._update()` / `QuerySet._insert()` — build the SQL query object (`query.py:1428`, `2112`)
+
+**`QuerySet._update`** (`query.py:1428`):
+```python
+query = self.query.chain(sql.UpdateQuery)   # clone current query, switch type
+query.add_update_fields(values)             # attach (field, model, value) triples
+query.annotations = {}                      # strip annotations; not valid in SET
+if returning_fields is None:
+    return query.get_compiler(self.db).execute_sql(ROW_COUNT)
+return query.get_compiler(self.db).execute_returning_sql(returning_fields)
+```
+
+**`QuerySet._insert`** (`query.py:2112`):
+```python
+query = sql.InsertQuery(self.model, ...)    # fresh query, not a clone
+query.insert_values(fields, objs, raw=raw)  # pack field list + object list
+return query.get_compiler(using=using).execute_sql(returning_fields)
+```
+
+Both paths end with `query.get_compiler(db)` — this returns the appropriate compiler subclass by looking up the backend's `DatabaseOperations` and instantiating either `SQLUpdateCompiler` or `SQLInsertCompiler`.
+
+---
+
+## Stage 6 — `SQLInsertCompiler.as_sql()` / `SQLUpdateCompiler.as_sql()` — generate SQL (`compiler.py:1801`, `2037`)
+
+**INSERT** (`as_sql@1801`):
+- Calls `connection.ops.insert_statement()` to get `"INSERT INTO"` (or `"INSERT OR REPLACE INTO"` for SQLite `on_conflict`).
+- Iterates fields, calls `field.pre_save_val()` and `prepare_value()` per object per field.
+- Handles `DatabaseDefault` (fields with `db_default`) — drops them from the column list if all rows use the default, or expands them into their expression SQL.
+- Calls `assemble_as_sql()` to produce placeholder rows and param rows.
+- Produces different SQL shapes depending on backend capabilities:
+  - `can_return_columns_from_insert` (PostgreSQL) → single `VALUES (...)` + `RETURNING ...`.
+  - `has_bulk_insert` → `bulk_insert_sql()` which produces `VALUES (...), (...), (...)`.
+  - Otherwise → one `(sql, params)` tuple per object row.
+- Returns a **list** of `(sql, params)` tuples (INSERT is the one compiler that can return multiple statements).
+
+**UPDATE** (`as_sql@2037`):
+- Calls `pre_sql_setup()` (resolves table aliases).
+- Iterates `query.values`; for each field: if the value has `resolve_expression()` it's compiled inline; if it has `as_sql()` it's compiled as a subexpression; otherwise it becomes a `%s` placeholder.
+- Calls `field.get_db_prep_save()` on plain values to apply DB-level type coercion.
+- Builds `UPDATE <table> SET col = %s, ... WHERE pk = %s`.
+- If `returning_fields` are set (backend supports `RETURNING`), appends that clause.
+- Returns a single `(sql, params)` tuple.
+
+---
+
+## Stage 7 — `execute_sql()` — run against the database cursor
+
+**INSERT path** — `SQLInsertCompiler.execute_sql` (`compiler.py:1925`):
+- Opens `connection.cursor()`.
+- Loops over the list of `(sql, params)` from `as_sql()`, calling `cursor.execute()` for each.
+- If `returning_fields` were requested and the backend supports `RETURNING` (PostgreSQL, MariaDB 10.5+, etc.), calls `connection.ops.fetch_returned_rows()` to pull the auto-generated values.
+- For backends that don't support `RETURNING` but do expose an auto-increment via `last_insert_id()` (MySQL, SQLite), calls `connection.ops.last_insert_id()` instead.
+- Runs converters on raw DB values before returning them.
+- Returns a list of row tuples (one per inserted object).
+
+**UPDATE path** — `SQLUpdateCompiler.execute_sql` (`compiler.py:2114`) delegates to `SQLCompiler.execute_sql` (`compiler.py:1595`):
+- Calls `self.as_sql()` to get `(sql, params)`.
+- Gets a cursor via `connection.cursor()`.
+- Calls `cursor.execute(sql, params)` — the parameterised query goes to the DB driver.
+- With `result_type=ROW_COUNT`, immediately reads `cursor.rowcount` and closes the cursor.
+- The rowcount flows back up: 0 means no row matched → `_save_table` interprets it as a miss and falls through to INSERT; >0 means a row was updated → `updated = True`.
+- If `returning_fields` were requested, `execute_returning_sql` (`compiler.py:2135`) is used instead — it sets `self.returning_fields` so `as_sql()` appends the `RETURNING` clause, then fetches and converts those rows from the cursor.
+
+---
+
+## How the stages connect — a single-object save
 
 ```
 Model.save()
-  └─ resolves DB alias, update_fields, deferred fields
+  └─ resolves `using`, normalises update_fields/force_insert
      └─ Model.save_base()
-           ├─ fires pre_save signal
-           ├─ _save_parents()    ← MTI parent rows first
-           ├─ _save_table()
-           │     ├─ pk set + not force_insert?
-           │     │     └─ _do_update()
-           │     │           └─ QuerySet._update()
-           │     │                 └─ SQLUpdateCompiler.as_sql() → cursor.execute()
-           │     └─ UPDATE hit nothing (or force_insert)?
-           │           └─ _do_insert()
-           │                 └─ QuerySet._insert()
-           │                       └─ SQLInsertCompiler.as_sql() → cursor.execute()
-           │                             └─ last_insert_id() / RETURNING rows
-           └─ fires post_save signal  (created = not updated)
+          ├─ pre_save signal
+          ├─ [transaction.atomic or mark_for_rollback_on_error]
+          │    ├─ _save_parents()   (MTI only, recursive)
+          │    └─ _save_table()
+          │         ├─ pk set + not force_insert?
+          │         │    └─ _do_update()
+          │         │         └─ QuerySet._update()
+          │         │              └─ SQLUpdateCompiler
+          │         │                   ├─ as_sql()  →  "UPDATE … SET … WHERE pk=%s"
+          │         │                   └─ execute_sql() / execute_returning_sql()
+          │         │                        └─ cursor.execute(sql, params)
+          │         │                             └─ rowcount → 0 or >0
+          │         └─ not updated?
+          │              └─ _do_insert()
+          │                   └─ QuerySet._insert()
+          │                        └─ SQLInsertCompiler
+          │                             ├─ as_sql()  →  "INSERT INTO … VALUES (…)"
+          │                             └─ execute_sql()
+          │                                  ├─ cursor.execute(sql, params)
+          │                                  └─ fetch RETURNING / last_insert_id
+          └─ post_save signal  (created=True if inserted, False if updated)
 ```
 
-The key invariant to keep in mind if you're modifying this flow: `_save_table` returns `True` only when an UPDATE found and modified a row. That boolean propagates up to `save_base` which uses it to set `created` on the `post_save` signal and to flip `_state.adding` to `False`. Any change to when `_do_update` returns an empty list versus a populated list will shift what callers observe as "this was a create vs an update."
+The returned values (auto-generated PK, `RETURNING` columns, generated fields) flow back through `_assign_returned_values()` in `_save_table`, so by the time `save()` returns the instance's `pk` and any DB-side computed fields are populated in memory.
