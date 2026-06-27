@@ -57,16 +57,19 @@ OUT="$(cd "$OUT" && pwd)"   # docker volume mounts require an absolute path
 CFG="$OUT/.cfg"; mkdir -p "$CFG"
 printf '{ "mcpServers": {} }\n' > "$CFG/empty-mcp.json"
 printf '{ "mcpServers": { "grove": { "command": "grove", "args": ["serve"] } } }\n' > "$CFG/grove-mcp.json"
+install -m 0644 "$CREDS" "$CFG/creds.json"   # copied into a fresh tmpfs .claude at container start
 
-# Stage a WRITABLE .claude dir (mode 0777) holding the creds, and mount the whole
-# dir at /home/bench/.claude.  Do NOT bind-mount the bare creds file into
-# /home/bench/.claude/.credentials.json: the image has no /home/bench/.claude, so
-# docker then creates it owned by ROOT, and the bench user (uid 1001) can't
-# `mkdir /home/bench/.claude/session-env` — which makes EVERY Bash tool call die
-# with `EACCES` and silently cripples the baseline into Read-only (grep/find
-# never run). Mounting a 0777 dir keeps session-env writable AND creds readable.
-DOTCLAUDE="$CFG/dotclaude"; mkdir -p "$DOTCLAUDE"; chmod 0777 "$DOTCLAUDE"
-install -m 0644 "$CREDS" "$DOTCLAUDE/.credentials.json"
+# /home/bench/.claude is a fresh PER-RUN tmpfs (mode 1777), seeded with only the
+# creds. Two problems this solves at once:
+#   1. The image has no /home/bench/.claude; bind-mounting the bare creds file made
+#      docker create that dir owned by ROOT, so bench (uid 1001) couldn't
+#      `mkdir .claude/session-env` and EVERY Bash tool call died with EACCES —
+#      silently crippling the baseline into Read-only. A writable tmpfs fixes that.
+#   2. claude writes config/session state into .claude (.claude.json, backups/,
+#      projects/, sessions/). A shared host dir leaked that state across runs/arms,
+#      and its container-uid-owned files couldn't be cleaned from the host. A tmpfs
+#      is ephemeral: every cell starts from an identical clean .claude, nothing
+#      persists to the host, no cross-arm contamination. (Creds copied in below.)
 
 case "$SIDE" in
   baseline) IMG="$BASE_IMG";  CFGNAME=empty-mcp.json ;;
@@ -100,10 +103,10 @@ echo "    repo dir: $CREPO   out: $OUTFILE"
 docker run --rm \
   -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e COLORTERM=truecolor \
   -e RACE_PROMPT="$(cat "$PROMPT_FILE")" \
-  -v "$DOTCLAUDE:/home/bench/.claude" \
+  --tmpfs /home/bench/.claude:rw,mode=1777 \
   -v "$CFG:/cfg:ro" \
   "$IMG" \
-  bash -lc "cd $CREPO && $INJECT; claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions ${MODEL_ARG[*]} --strict-mcp-config --mcp-config /cfg/$CFGNAME" \
+  bash -lc "cp /cfg/creds.json /home/bench/.claude/.credentials.json; cd $CREPO && $INJECT; claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions ${MODEL_ARG[*]} --strict-mcp-config --mcp-config /cfg/$CFGNAME" \
   > "$OUTFILE"
 
 if [[ -s "$OUTFILE" ]] && grep -q '"type":"result"' "$OUTFILE"; then
