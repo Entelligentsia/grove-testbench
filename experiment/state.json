@@ -172,29 +172,88 @@
         "baseline": {
           "grounding": 0.93,
           "completeness": 1,
-          "verdict": "Full. All 6 spine elements + iskvobj/metabits/kvobj-layout/LFU detail/16-byte packing. Cites resolve (object.h:100-112, 96-98, 188-190; server.h:126 for OBJ_SHARED_INTEGERS). Slightly loose: gave refcount fns as object.h:128-130 (actual 128-129) and listed type constants without pinning server.h:856. Reached this via grep+one Read — cheapest (126k ctx) and fastest (61s)."
+          "verdict": "Full. Identifies struct redisObject/robj at object.h:100-112, nails the type-vs-encoding distinction, and covers all 6 spine fields plus iskvobj/metabits/kvobj extras. Cites resolve well (object.h:96-98 for refcount sentinels is slightly loose since 98 is OBJ_FIRST_SPECIAL, and objectSetLRUOrLFU is at 189 not 188-190), but server.h:126 OBJ_SHARED_INTEGERS and kvobjGetAllocPtr@194 confirm. Used grep then a full Read."
+        },
+        "grove": {
+          "grounding": 0.97,
+          "completeness": 1,
+          "verdict": "Full. Cleanly locates object.h:100 via grove symbol/source tools, gives the robj+kvobj typedefs, encoding constants 75-88, and all 6 spine fields with the type-vs-encoding distinction front and center. Cites are tight and resolve (minor: incr/decrRefCount given as 129-130 when decr is at 128). Strongest structured navigation."
+        },
+        "lsp": {
+          "grounding": 0.95,
+          "completeness": 1,
+          "verdict": "Full. After the LSP index failed to warm, fell back to grep + Read and still produced a complete, accurate answer: struct at object.h:100-112, type constants server.h:856-884 (verified), encoding 75-88, LRU_CLOCK_RESOLUTION object.h:92, and a sharp two-level type-system summary. All 6 spine elements plus kvobj layout. Cites resolve (incr/decr 129-130 slightly loose on decr@128)."
+        }
+      },
+      "key_revisions": [],
+      "verdict": "All three arms scored Full on completeness with strong grounding — each correctly centered the type (logical) vs encoding (concrete) distinction and covered refcount, lru, ptr, and the kvobj extras. Grove was marginally tightest on citations via its structural tools; baseline and LSP both reached the same answer via grep+Read, with LSP notable for recovering gracefully after its index failed to warm.",
+      "ts": "2026-06-27T11:52:20.936Z"
+    },
+    "L1-django": {
+      "scores": {
+        "baseline": {
+          "grounding": 0.95,
+          "completeness": 1,
+          "verdict": "Cites class:34, _func_path 64-71, view_name 73-74, namespace filtering at lines 59/61 — all resolve correctly in source. Covers every spine element: func, args/kwargs with the captured/extra split, url_name/route, both namespace axes, view_name, and the __getitem__ triple consumed by the base handler."
+        },
+        "grove": {
+          "grounding": 0.8,
+          "completeness": 1,
+          "verdict": "Content is fully accurate and the one explicit cite (class at :34) is correct, with code excerpts matching source verbatim, but it provides few per-attribute line numbers. Hits all required-spine elements including the captured/extra split, dual namespace stacks, view_name, the triple, plus __reduce_ex__ PicklingError."
+        },
+        "lsp": {
+          "grounding": 1,
+          "completeness": 1,
+          "verdict": "Most line-precise of the three: func:48, view_class:64, url_name:51, _func_path:70-71, view_path/view_name:73-74, route:52, tried:53, __getitem__:76-77 — every cite resolves exactly. Complete coverage of all spine elements and correctly names BaseHandler.resolve_request as the triple's consumer."
+        }
+      },
+      "key_revisions": [],
+      "verdict": "All three arms correctly identify ResolverMatch and hit the full required spine with no factual errors. LSP edges out on grounding with the most numerous and exactly-correct line citations, baseline is close behind with accurate range cites, and grove is equally complete in content but offers the fewest explicit line numbers.",
+      "ts": "2026-06-27T11:52:21.652Z"
+    },
+    "L5-redis": {
+      "scores": {
+        "baseline": {
+          "grounding": 0.88,
+          "completeness": 1,
+          "verdict": "Traces the full cross-cutting path: dirty-delta detection in call, deferred alsoPropagate into server.also_propagate, the afterCommand->postExec->propagatePendingCommands flush with MULTI/EXEC wrapping, propagateNow split to AOF/replicationFeedSlaves, and RESP encoding into the shared repl buffer, even extending to per-replica socket write. Cites mostly resolve (3978, 4032, 4127-4154, 3732, 3811, 3867, 3704, 631, server.h:1802, networking 2734 all correct); a few are loose (setGenericCommand labeled t_string.c:190 which is the server.dirty++ line, and putClientInPendingWriteQueue tied to networking.c:275 which is the write-handler-install region)."
+        },
+        "grove": {
+          "grounding": 0.98,
+          "completeness": 1,
+          "verdict": "Hits all six spine elements with the queue-then-flush indirection made explicit, and every sampled cite resolves exactly (call 3949, propagateNow 3704, alsoPropagate 3732, afterCommand 4271, postExec 3867, propagatePendingCommands 3811, replicationFeedSlaves 631, feedReplicationBuffer 618, replBufWriter Begin/Append/End 466/533/565, prepareReplicasToWrite 363, shouldPropagate 3673). Cleanest grounding of the three and correctly bridges the propagation and transport subsystems."
+        },
+        "lsp": {
+          "grounding": 0.93,
+          "completeness": 1,
+          "verdict": "Full chain covered end-to-end with the deferred-flush rationale and nesting guard explained; core cites (3949, 3978, 4015, 4032, 4127-4153, 3732, 3811, 3867, 3704, 631, replBufWriter 466/565, prepareReplicasToWrite 363) all verify. Slightly loose only on the SELECT-injection (cited 672-699; actual createObject/feed is ~682-688) and RESP-encoding (702-724) line ranges, which are approximate but in the right region."
+        }
+      },
+      "key_revisions": [],
+      "verdict": "All three arms reached Full: each traced proc->dirty-detection->deferred alsoPropagate->afterCommand/postExec/propagatePendingCommands flush->propagateNow->replicationFeedSlaves/feedReplicationBuffer and explicitly named the queue-then-flush indirection that is the crux. Grove had the tightest grounding (every cite exact), LSP nearly as good with a couple of approximate line ranges, and baseline was equally complete (going furthest into the per-replica socket-write path) but carried two slightly loose citations.",
+      "ts": "2026-06-27T11:52:22.381Z"
+    },
+    "L5-django": {
+      "scores": {
+        "baseline": {
+          "grounding": 1,
+          "completeness": 1,
+          "verdict": "Traced the full save->save_base->_save_table->_do_update/_do_insert->QuerySet._update/_insert->compiler.execute_sql->cursor.execute chain with both branches. All cited lines (base.py 841/950/1069/1206/1246, query.py 1428/2112, compiler.py 1801/1925/2037) resolve correctly. Describes pre_save/post_save signals and the updated/created feedback though without citing the exact signal lines."
         },
         "grove": {
           "grounding": 1,
           "completeness": 1,
-          "verdict": "Full. All 6 spine + extras. Best-grounded: line-exact and correct everywhere — struct object.h:100, robj typedef 115, encoding constants 75, refcount sentinels 96, and uniquely pinned the type constants at server.h:856 (which the reference key omitted). 8 grove tool calls; highest context (300k) and slowest (108s) of the three."
+          "verdict": "Complete trace of all six spine elements including the update-vs-insert decision, both compiler paths, and the updated->created invariant feeding post_save. All cites (incl. compiler.py:2135 execute_returning_sql and 2037 as_sql) verified correct. Signals described accurately but exact line numbers for pre_save/post_save not cited."
         },
         "lsp": {
-          "grounding": 0.97,
+          "grounding": 1,
           "completeness": 1,
-          "verdict": "Full. All 6 spine + extras, strongest prose on the type/encoding contract and kvobj layout. Cites resolve; incrRefCount/decrRefCount given as object.h:128-129 (exact — more precise than the key's 128-130). Did not pin server.h:856 for type constants. 6 mcp__lsp__definition calls; mid context (213k), 76s."
+          "verdict": "Most granular and fully accurate: cites the precise signal line (base.py:976 pre_save), PK setup (1098), the fast-insert and update/insert ranges, plus base SQLCompiler.execute_sql (1595) under the update path. Every sampled cite resolves correctly and the full cross-cutting path is connected end to end."
         }
       },
-      "key_revisions": [
-        {
-          "level": "L1",
-          "reason": "Spine element 2 (type) located the struct field (object.h:101) but never pinned where the OBJ_STRING/LIST/... type constants are defined. Verified in pinned source: they live in src/server.h:856. grove cited this exactly. Add server.h:856 as the canonical cite for the type-constant values.",
-          "cite": "src/server.h:856",
-          "ts": "2026-06-27"
-        }
-      ],
-      "verdict": "L1-redis: all three arms produce Full answers — every one nails the central type-vs-encoding distinction, refcount sentinels, and LRU/LFU split, with resolvable object.h cites. At this retrieval-difficulty rung answer QUALITY does not separate the tools; the separation is in PROCESS metrics: baseline cheapest+fastest (126k/61s) via grep+read, grove most thorough+best-grounded but priciest (300k/108s, 8 grove calls), lsp in between (213k/76s, 6 semantic definition calls). Note: lsp arm required steering parallel to grove's to engage its tools (see methodology note); without it the agent defaulted to grep.",
-      "ts": "2026-06-27T07:10:29.325Z"
+      "key_revisions": [],
+      "verdict": "All three arms produced Full answers tracing the entire cross-cutting write path with grounding that checks out against the pinned source. LSP is marginally the most precise (it cites the exact pre_save signal line and the base execute_sql), while baseline and grove describe the signals correctly but cite fewer exact signal line numbers; the difference is cosmetic since all hit every required spine element.",
+      "ts": "2026-06-27T11:52:23.109Z"
     }
   }
 }
