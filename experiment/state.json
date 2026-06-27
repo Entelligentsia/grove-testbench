@@ -58,7 +58,12 @@
       "status": "pending"
     },
     "L5-baseline-redis": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 191,
+      "context": 1578920,
+      "engaged": true,
+      "evidence": "evidence/nav3/L5/raw/redis-L5.claude.baseline.jsonl",
+      "ts": "2026-06-27T11:44:17.469Z"
     },
     "L5-grove-redis": {
       "status": "harvested",
@@ -128,7 +133,12 @@
       "status": "pending"
     },
     "L5-baseline-django": {
-      "status": "pending"
+      "status": "harvested",
+      "run_wall_s": 110,
+      "context": 182567,
+      "engaged": true,
+      "evidence": "evidence/nav3/L5/raw/django-L5.claude.baseline.jsonl",
+      "ts": "2026-06-27T11:46:10.168Z"
     },
     "L5-grove-django": {
       "status": "harvested",
