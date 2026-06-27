@@ -23,7 +23,7 @@ REST="hugo typescript webpack spring-boot rails laravel"
 ALL_REPOS="redis bitcoin django tokio hugo typescript webpack spring-boot rails laravel"
 REPOS="$SUBSET"
 BASELINE_IMG="grove-testbench/base:latest"
-GROVE_IMG="grove-testbench/grove:v0.1.9"
+GROVE_IMG="grove-testbench/grove:v0.1.10"
 DRY=0
 while [[ $# -gt 0 ]]; do case "$1" in
   --model)    MODEL="$2"; shift 2 ;;

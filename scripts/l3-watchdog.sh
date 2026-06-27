@@ -14,7 +14,7 @@ REPOS=("$@")
 MAXBYTES="${MAXBYTES:-1500000}"
 RUNLOG="${RUNLOG:-$root/out/l3-rest.log}"
 BASE_IMG="grove-testbench/base"
-GROVE_IMG="grove-testbench/grove:v0.1.9"
+GROVE_IMG="grove-testbench/grove:v0.1.10"
 
 echo "[watchdog] cutoff=${MAXBYTES}B  out=$OUT  repos=${REPOS[*]:-<all>}"
 

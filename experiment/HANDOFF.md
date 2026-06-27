@@ -23,7 +23,7 @@ not statistical). 4 weighed metrics: context, time (run+setup), complexity, blin
 answer quality.
 
 - **baseline** = bash+coreutils (text). Image `grove-testbench/base:latest`, no MCP.
-- **grove** = + grove MCP/CLI (structural). Image `grove-testbench/grove:v0.1.9`.
+- **grove** = + grove MCP/CLI (structural). Image `grove-testbench/grove:v0.1.10`.
 - **lsp** = + Claude Code's NATIVE `LSP` tool (semantic), configured by
   `experiment/lsp-plugin/.lsp.json`, loaded with `--plugin-dir`. Image
   `grove-testbench/lsp:latest` (servers) or `:redis` (warm clangd cache).

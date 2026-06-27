@@ -4,7 +4,7 @@
   "model": "sonnet",
   "arms": {
     "baseline": { "capability": "bash + coreutils (text search)",           "image": "grove-testbench/base:latest",  "mcp": null,         "needs_index": false },
-    "grove":    { "capability": "bash + grove MCP/CLI (structural)",         "image": "grove-testbench/grove:v0.1.9", "mcp": "grove",      "needs_index": false },
+    "grove":    { "capability": "bash + grove MCP/CLI (structural)",         "image": "grove-testbench/grove:v0.1.10", "mcp": "grove",      "needs_index": false },
     "lsp":      { "capability": "bash + native Claude Code LSP tool (semantic)", "image": "grove-testbench/lsp:latest", "mcp": null,      "needs_index": false }
   },
   "rungs": ["L1", "L2", "L3", "L4", "L5"],
@@ -23,7 +23,7 @@
   },
   "provenance": {
     "harness_fix_commit": "edaa3ce",
-    "grove_version": "0.1.9",
+    "grove_version": "0.1.10",
     "repo_pins": "repos.manifest (per-repo SHAs)",
     "prompts_spec": "experiment/PROMPT_GENESIS.md",
     "genesis_walled_off": true

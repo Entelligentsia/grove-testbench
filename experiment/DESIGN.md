@@ -57,7 +57,7 @@ capability.
 | Arm | Capability | Image | MCP |
 |---|---|---|---|
 | `baseline` | bash + coreutils (grep, sed, ls, find, awk…) | `grove-testbench/base` | none |
-| `grove` | + grove MCP **and** CLI (tree-sitter, structural) | `grove-testbench/grove:v0.1.9` | grove |
+| `grove` | + grove MCP **and** CLI (tree-sitter, structural) | `grove-testbench/grove:v0.1.10` | grove |
 | `lsp` | + LSP via an MCP→LSP bridge (semantic, per-language) | `grove-testbench/lsp` | one bridge/repo |
 
 ## Metrics (all weighed in the final write-up)
