@@ -1,0 +1,56 @@
+{
+  "experiment": "nav-3way",
+  "spine": "experiment/spine.json",
+  "registered_repos": [
+    "redis"
+  ],
+  "sides": {
+    "L1-baseline-redis": {
+      "status": "pending"
+    },
+    "L1-grove-redis": {
+      "status": "pending"
+    },
+    "L1-lsp-redis": {
+      "status": "pending"
+    },
+    "L2-baseline-redis": {
+      "status": "pending"
+    },
+    "L2-grove-redis": {
+      "status": "pending"
+    },
+    "L2-lsp-redis": {
+      "status": "pending"
+    },
+    "L3-baseline-redis": {
+      "status": "pending"
+    },
+    "L3-grove-redis": {
+      "status": "pending"
+    },
+    "L3-lsp-redis": {
+      "status": "pending"
+    },
+    "L4-baseline-redis": {
+      "status": "pending"
+    },
+    "L4-grove-redis": {
+      "status": "pending"
+    },
+    "L4-lsp-redis": {
+      "status": "pending"
+    },
+    "L5-baseline-redis": {
+      "status": "pending"
+    },
+    "L5-grove-redis": {
+      "status": "pending"
+    },
+    "L5-lsp-redis": {
+      "status": "pending"
+    }
+  },
+  "setup": {},
+  "judge": {}
+}

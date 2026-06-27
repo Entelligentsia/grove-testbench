@@ -8,3 +8,6 @@ grove
 
 # scratch
 *.log
+
+# offline prompt-genesis: pinned source clones (1.1G; reproducible from repos.manifest)
+experiment/repos/
