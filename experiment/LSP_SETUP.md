@@ -42,6 +42,37 @@ On a controlled 2-file TS project (`a.ts` defines `class Foo`, `b.ts` uses it):
 So the **bridge mechanism is sound**: name-based, line-exact, source-quoted. The
 MCP↔LSP↔server path works end to end.
 
+## redis/clangd: the full chain we had to solve (worked example)
+
+Getting one C repo's LSP arm working surfaced three independent obstacles — a
+concrete measure of the LSP "complexity" axis:
+
+1. **Incomplete index from a hand-made compile DB.** A guessed `compile_flags.txt` /
+   `compile_commands.json` makes clangd log `Failed to compile … index may be
+   incomplete` on nearly every file → a useless index. **Fix:** include build
+   tools and run the *real* build — `bear -- make` — to capture the true compile
+   DB (correct flags + generated headers). With it, the "Failed to compile" lines
+   vanish. Build tools live in `base` (uniform across arms); the build *execution*
+   is LSP's per-repo setup cost (`setup_s`).
+2. **clangd can't find the DB unless told.** Launched by the bridge, clangd's cwd
+   isn't the repo. **Fix:** pass `--compile-commands-dir=<repo>`.
+3. **Cold clangd won't serve `workspace/symbol` until a file is opened.** The
+   bridge's name-based `definition`/`references` call `workspace/symbol` without
+   opening a file, so on a fresh server they return empty forever (verified:
+   cold `workspace/symbol(dictAdd)` → `[]`; after one `didOpen` → 6 results across
+   the whole project). **Fix:** `experiment/lsp/lsp-seed.py` — a transparent LSP
+   proxy that injects one `didOpen` for `$LSP_SEED_FILE` right after `initialized`.
+
+**Verified end-to-end:** bridge → `lsp-seed.py` → clangd resolves
+`definition(dictAdd)` → `src/dict.c:493` line-exact, with source. The runtime
+bridge config is:
+```
+LSP_SEED_FILE=/home/bench/repos/<repo>/<a-source-file>
+mcp-language-server -workspace /home/bench/repos/<repo> \
+  -lsp python3 -- /usr/local/bin/lsp-seed.py clangd \
+  --background-index --compile-commands-dir=/home/bench/repos/<repo>
+```
+
 ## Complexity discovered (the core finding)
 
 The bridge is the easy part. The cost — and it is large and uneven — is getting

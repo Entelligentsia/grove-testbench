@@ -23,8 +23,10 @@ USER root
 # the bridge binary
 COPY --from=bridge /out/mcp-language-server /usr/local/bin/mcp-language-server
 
-# C / C++ semantic server (redis, bitcoin) — needs a per-repo compile DB,
-# generated at the lsp setup step (compile_flags.txt or compile_commands.json).
+# C / C++ semantic server (redis, bitcoin). The build tools clangd relies on
+# (make, gcc, bear) live in `base` — uniform across all arms; only the build
+# EXECUTION is LSP's per-repo setup (it produces the true compile_commands.json
+# that lets clangd index completely; that wall time is the arm's honest setup_s).
 RUN apt-get update && apt-get install -y --no-install-recommends clangd \
     && rm -rf /var/lib/apt/lists/*
 
@@ -32,6 +34,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends clangd \
 # Python (django), PHP (laravel). Heavier toolchains (go/rust/ruby/java) are
 # layered on later as those repos are wired.
 RUN npm install -g typescript-language-server typescript pyright intelephense
+
+# seed-open LSP proxy: injects one didOpen after `initialized` so the bridge's
+# name-based workspace/symbol queries resolve on a cold server (see the script).
+COPY experiment/lsp/lsp-seed.py /usr/local/bin/lsp-seed.py
+RUN chmod +x /usr/local/bin/lsp-seed.py
 
 USER bench
 CMD ["bash"]

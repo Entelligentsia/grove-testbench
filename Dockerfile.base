@@ -26,7 +26,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         asciinema \
         less \
         bash \
+        bear \
     && rm -rf /var/lib/apt/lists/*
+
+# --- build tools (UNIFORM across all arms) ---------------------------------
+# A realistic agent checkout has a toolchain; all three arms (baseline/grove/lsp)
+# inherit the SAME build tools so the only variable between them stays the
+# navigation capability. base already provides make + gcc; `bear` is added above
+# to intercept a real build into compile_commands.json. The build EXECUTION is
+# not done here — it is the LSP arm's per-repo setup step (clangd needs the
+# compile DB), so its cost is attributed to LSP, not shared. Per-language build
+# toolchains (go, cargo/rust, jdk+gradle, ruby) are added here as those repos are
+# wired — same principle: uniform availability, arm-specific use.
 
 # --- agent CLIs (global, via npm — no TTY needed) --------------------------
 # pi requires Node >=22.19 and its shell installer needs a terminal; installing
