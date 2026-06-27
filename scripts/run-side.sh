@@ -81,6 +81,15 @@ esac
 CREPO="/home/bench/repos/$REPO"
 OUTFILE="$OUT/$SCENE.claude.$SIDE.jsonl"
 
+# Subagent transcripts are NOT in the stream-json: claude writes each Task/Agent
+# subagent's own session to ~/.claude/projects/**/subagents/agent-*.jsonl, and the
+# parent stream carries only the subagent's RETURNED result (no isSidechain steps).
+# The .claude tmpfs is destroyed on --rm, so we copy those files out, from INSIDE
+# the container (they are bench-owned), into a host dir the harvest step files into
+# evidence/. mode 0777 so the container user can write; harmless when no subagent runs.
+SADIR="$OUT/$SCENE.claude.$SIDE.subagents"
+mkdir -p "$SADIR"; chmod 0777 "$SADIR"   # cleared inside the container (bench-owned files)
+
 # fair tool steering: the two TOOLED arms are symmetric — each gets base.md plus a
 # steering block that points the agent at its navigation capability (grove's block
 # is baked into the image's repo CLAUDE.md by `grove init`; lsp's is the host-side
@@ -112,17 +121,29 @@ echo "=== $SCENE / arm=$SIDE — $IMG ==="
 echo "    prompt: $PROMPT_FILE"
 echo "    repo dir: $CREPO   out: $OUTFILE"
 
+# Capture step (runs after claude, regardless of its exit, so partial subagent
+# transcripts survive a crash): copy every subagent session file out to /sa. Its
+# stdout is sent to /dev/null so it never pollutes the stream-json on OUTFILE.
+# cp without -p (the source .jsonl is 0600) then chmod a+r, so the host harvest can
+# read the bench-owned copies; /sa stays on the host after --rm destroys the tmpfs.
+HARVEST_SA="{ rm -rf /sa/* 2>/dev/null; find \$HOME/.claude/projects -path '*/subagents/*' -type f \\( -name '*.jsonl' -o -name '*.meta.json' \\) -exec cp {} /sa/ \\; ; chmod -R a+rX /sa; } >/dev/null 2>&1 || true"
+
 docker run --rm \
   -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e COLORTERM=truecolor \
   -e RACE_PROMPT="$(cat "$PROMPT_FILE")" \
   --tmpfs /home/bench/.claude:rw,mode=1777 \
   -v "$CFG:/cfg:ro" \
+  -v "$SADIR:/sa" \
   "$IMG" \
-  bash -lc "cp /cfg/creds.json /home/bench/.claude/.credentials.json; cd $CREPO && $INJECT; claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions ${MODEL_ARG[*]} --strict-mcp-config --mcp-config /cfg/$CFGNAME" \
+  bash -lc "cp /cfg/creds.json /home/bench/.claude/.credentials.json; cd $CREPO && $INJECT; claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions ${MODEL_ARG[*]} --strict-mcp-config --mcp-config /cfg/$CFGNAME; $HARVEST_SA" \
   > "$OUTFILE"
 
+# report subagent transcripts captured (jsonl only; each has a sibling .meta.json)
+n_sa=$(find "$SADIR" -name '*.jsonl' 2>/dev/null | wc -l)
+if [[ "$n_sa" -eq 0 ]]; then rmdir "$SADIR" 2>/dev/null || true; fi
+
 if [[ -s "$OUTFILE" ]] && grep -q '"type":"result"' "$OUTFILE"; then
-  echo "    -> OK ($(wc -l <"$OUTFILE") events, $(stat -c%s "$OUTFILE") B)"
+  echo "    -> OK ($(wc -l <"$OUTFILE") events, $(stat -c%s "$OUTFILE") B, $n_sa subagent transcript(s))"
 else
-  echo "    -> WARN: no result event ($(stat -c%s "$OUTFILE" 2>/dev/null||echo 0) B)" >&2
+  echo "    -> WARN: no result event ($(stat -c%s "$OUTFILE" 2>/dev/null||echo 0) B, $n_sa subagent transcript(s))" >&2
 fi

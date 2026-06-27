@@ -58,6 +58,13 @@ prepped + registered so far (15 cells, all `pending`).
 - **Pinned source:** `experiment/repos/<repo>` (gitignored, SHA-verified == images). Re-clone: `experiment/clone-source.sh [--repo NAME]`.
 - **Skills:** `.claude/skills/exp-prep/` (onboard a repo: clone→generate→verify→register), `.claude/skills/runarm/` (drive one cell: preflight→run→verify→harvest→record).
 - **Runners:** `scripts/run-side.sh` (`--prompt`, arms baseline|grove|lsp, tmpfs), `experiment/side-metrics.sh` (per-side metrics + engagement signals).
+- **Subagent transcripts:** a Task/Agent subagent's own tool-by-tool session is NOT
+  in the stream-json (parent stream carries only its returned result; `isSidechain=0`).
+  claude writes it to `~/.claude/projects/**/subagents/agent-*.jsonl` — which the
+  `.claude` tmpfs would destroy on `--rm`. `run-side.sh` now copies these out (from
+  inside the container, chmod a+r) to `out/exp/<scene>.claude.<arm>.subagents/` and
+  prints the count; runarm step 4 files them into `evidence/nav3/<rung>/raw/subagents/`.
+  (L1-redis spawned none. Verified end-to-end on a forced Task spawn.)
 - **Evidence:** harvested to `evidence/nav3/<rung>/{raw,readable}/` (none kept yet — L1-redis was a reset dry run).
 - **LSP:** `Dockerfile.lsp`, `experiment/lsp/lsp-seed.py` (seed-open proxy).
 

@@ -53,6 +53,12 @@ Block (with reason) and stop if any fail; do NOT harvest:
 ### 4. Harvest (only after the gate passes)
 - `mkdir -p evidence/nav3/<rung>/{raw,readable}`
 - raw: copy `out/exp/<repo>-<rung>.claude.<arm>.jsonl` → `evidence/nav3/<rung>/raw/`
+- **subagents (if any):** if `out/exp/<repo>-<rung>.claude.<arm>.subagents/` exists and is
+  non-empty, copy it to `evidence/nav3/<rung>/raw/subagents/<repo>-<rung>.<arm>/`. These are
+  each Task/Agent subagent's OWN tool-by-tool session (`agent-*.jsonl` + `.meta.json`) — they
+  are NOT in the parent stream-json (which carries only the subagent's returned result), and
+  the `.claude` tmpfs is destroyed on `--rm`, so this is the only copy. `run-side.sh` prints
+  the count in its OK/WARN line; harvest whatever it captured.
 - readable: `scripts/extract-transcript.sh <raw> "$(cat experiment/prompts/<repo>/<rung>.txt)" > evidence/nav3/<rung>/readable/<repo>-<rung>.claude.<arm>.md`
 - metrics (from side-metrics JSON):
   ```
