@@ -16,11 +16,11 @@
     },
     "L1-grove-redis": {
       "status": "harvested",
-      "run_wall_s": 108,
-      "context": 300349,
+      "run_wall_s": 71,
+      "context": 275201,
       "engaged": true,
       "evidence": "evidence/nav3/L1/raw/redis-L1.claude.grove.jsonl",
-      "ts": "2026-06-27T06:59:01.698Z"
+      "ts": "2026-06-27T10:23:13.208Z"
     },
     "L1-lsp-redis": {
       "status": "harvested",
