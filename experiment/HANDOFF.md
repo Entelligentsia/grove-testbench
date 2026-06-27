@@ -1,13 +1,13 @@
 # HANDOFF — nav-3way experiment (resume point)
 
 **Branch:** `experiment/nav-3way` (off `master`). Not pushed.
-**Last milestone:** **L1-redis is COMPLETE across all 3 arms + blind-judged.** The
-LSP per-repo setup is productionized (warmed `lsp:redis` image + bridge config +
-verification gate, setup recorded in the ledger). All 15 redis cells: 3 harvested
-(L1×3), 12 pending (L2–L5×3).
-**Immediate task:** fan out — `/exp-prep` the other 9 repos, then run the matrix.
-Before automating multi-repo LSP warm: rebuild `base` so `bear` is baked in (the
-redis warm image got `bear` ad-hoc; base still lacks it — verified).
+**Last milestone:** **L1-django COMPLETE across all 3 arms** on the frozen
+all-language base, with the **lsp arm pivoted to Claude Code's NATIVE LSP tool**
+(pyright validated) and the **grove arm on v0.1.9**. redis-L1 also done earlier
+(its lsp arm is bridge-era/STALE — re-run via native LSP before trusting).
+**Immediate task:** judge L1-django; optionally re-run the 2 grove cells
+(redis/django-L1) that were on v0.1.8 + the stale redis lsp cell for consistency;
+then continue django L2–L5 (wire the 1.5MB watchdog for L3–L5) and fan out.
 
 Read these first (they are the source of truth, don't re-derive):
 `experiment/DESIGN.md` · `experiment/PROMPT_GENESIS.md` · `experiment/LSP_SETUP.md`
@@ -23,14 +23,14 @@ not statistical). 4 weighed metrics: context, time (run+setup), complexity, blin
 answer quality.
 
 - **baseline** = bash+coreutils (text). Image `grove-testbench/base:latest`, no MCP.
-- **grove** = + grove MCP/CLI (structural). Image `grove-testbench/grove:v0.1.8`.
+- **grove** = + grove MCP/CLI (structural). Image `grove-testbench/grove:v0.1.9`.
 - **lsp** = + Claude Code's NATIVE `LSP` tool (semantic), configured by
   `experiment/lsp-plugin/.lsp.json`, loaded with `--plugin-dir`. Image
   `grove-testbench/lsp:latest` (servers) or `:redis` (warm clangd cache).
   (PIVOTED away from the isaacphi MCP→LSP bridge — see "Native LSP pivot" below.)
 
-Matrix = 5 rungs × 3 arms × 10 repos = **150 per-side cells**. Only **redis** is
-prepped + registered so far (15 cells, all `pending`).
+Matrix = 5 rungs × 3 arms × 10 repos = **150 per-side cells**. **redis + django**
+prepped + registered (30 cells); 6 harvested (redis-L1 ×3, django-L1 ×3), 24 pending.
 
 ## Hard invariants (do NOT violate)
 - **`experiment/statectl/statectl` is the ONLY writer of `state.json`.** Never

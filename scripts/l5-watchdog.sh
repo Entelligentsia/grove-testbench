@@ -15,7 +15,7 @@ MAXBYTES="${MAXBYTES:-1500000}"
 POLL="${POLL:-60}"
 RUNLOG="${RUNLOG:-$root/out/l5/run.log}"
 BASE_IMG="grove-testbench/base"
-GROVE_IMG="grove-testbench/grove:v0.1.8"
+GROVE_IMG="grove-testbench/grove:v0.1.9"
 
 echo "[watchdog] cutoff=${MAXBYTES}B  poll=${POLL}s  out=$OUT  repos=${REPOS[*]:-<all>}"
 

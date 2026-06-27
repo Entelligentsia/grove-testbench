@@ -33,7 +33,7 @@ OUT="$root/out/l4"
 ALL_REPOS="laravel django spring-boot redis rails tokio webpack bitcoin typescript hugo"
 REPOS="$ALL_REPOS"
 BASELINE_IMG="grove-testbench/base:latest"
-GROVE_IMG="grove-testbench/grove:v0.1.8"
+GROVE_IMG="grove-testbench/grove:v0.1.9"
 DRY=0
 while [[ $# -gt 0 ]]; do case "$1" in
   --model)    MODEL="$2"; shift 2 ;;
