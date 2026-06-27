@@ -1,0 +1,60 @@
+{
+  "repo": "opt-bitcoin-L2_callsites",
+  "agent": "claude",
+  "sides": {
+    "baseline": {
+      "grove": false,
+      "present": true,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_creation_tokens": 0,
+      "context_tokens": 0,
+      "orchestrator_context_tokens": 0,
+      "subagent_context_tokens": 0,
+      "delegated": true,
+      "parent_tool_calls": 32,
+      "subagent_tool_calls": 135,
+      "output_tokens_only": 0,
+      "total_tokens": 0,
+      "turns": 0,
+      "tool_calls": 167,
+      "duration_ms": 0,
+      "duration_s": 0,
+      "cost_usd": 0
+    },
+    "grove": {
+      "grove": true,
+      "present": true,
+      "input_tokens": 731,
+      "output_tokens": 17576,
+      "cache_read_tokens": 1563229,
+      "cache_creation_tokens": 138208,
+      "context_tokens": 1702168,
+      "orchestrator_context_tokens": 459988,
+      "subagent_context_tokens": 1242180,
+      "delegated": true,
+      "parent_tool_calls": 25,
+      "subagent_tool_calls": 44,
+      "output_tokens_only": 17576,
+      "total_tokens": 1719744,
+      "turns": 26,
+      "tool_calls": 69,
+      "duration_ms": 891240,
+      "duration_s": 891.24,
+      "cost_usd": 0.8745711500000001
+    }
+  },
+  "winner": {
+    "context": "baseline",
+    "time": "baseline",
+    "tool_calls": "grove",
+    "turns": "baseline"
+  },
+  "delta_pct": {
+    "context": null,
+    "time": null,
+    "tool_calls": -58.68,
+    "turns": null
+  }
+}
