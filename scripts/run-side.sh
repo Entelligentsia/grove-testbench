@@ -143,7 +143,13 @@ if [[ "$SIDE" == lsp ]]; then
   echo "    lsp plugin: $LSP_PLUGIN"
 fi
 
-docker run --rm \
+# Runaway guard (generalized from l5-watchdog.sh; mandatory for L3/L4/L5, harmless
+# for L1/L2 which never approach the cutoff): run the container NAMED + backgrounded,
+# poll the transcript size, and docker-kill it if it blows past WATCHDOG_MAX before a
+# result event lands. A killed runaway has no result event -> DNF -> the gate WARNs.
+CNAME="navrun-${SCENE}-${SIDE}-$$"
+WD_MAX="${WATCHDOG_MAX:-1500000}"; WD_POLL="${WATCHDOG_POLL:-15}"
+docker run --rm --name "$CNAME" \
   -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e COLORTERM=truecolor \
   -e RACE_PROMPT="$(cat "$PROMPT_FILE")" \
   --tmpfs /home/bench/.claude:rw,mode=1777 \
@@ -152,7 +158,18 @@ docker run --rm \
   "${PLUGIN_MOUNT[@]}" \
   "$IMG" \
   bash -lc "cp /cfg/creds.json /home/bench/.claude/.credentials.json; cd $CREPO && $INJECT; claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions ${MODEL_ARG[*]} --strict-mcp-config --mcp-config /cfg/$CFGNAME $PLUGIN_ARG; $HARVEST_SA" \
-  > "$OUTFILE"
+  > "$OUTFILE" &
+RUNPID=$!
+( while docker ps -q -f "name=^${CNAME}$" | grep -q .; do
+    sz=$(stat -c%s "$OUTFILE" 2>/dev/null || echo 0)
+    if (( sz > WD_MAX )) && ! grep -q '"type":"result"' "$OUTFILE" 2>/dev/null; then
+      echo "    [watchdog] KILL $CNAME — transcript ${sz}B > ${WD_MAX}B (runaway DNF)" >&2
+      docker kill "$CNAME" >/dev/null 2>&1; break
+    fi
+    sleep "$WD_POLL"
+  done ) & WDPID=$!
+wait "$RUNPID" 2>/dev/null || true
+kill "$WDPID" 2>/dev/null || true; wait "$WDPID" 2>/dev/null || true
 
 # report subagent transcripts captured (jsonl only; each has a sibling .meta.json)
 n_sa=$(find "$SADIR" -name '*.jsonl' 2>/dev/null | wc -l)
