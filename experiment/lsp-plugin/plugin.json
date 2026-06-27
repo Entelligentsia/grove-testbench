@@ -1,0 +1,5 @@
+{
+  "name": "gt-lsp",
+  "version": "0.1.0",
+  "description": "grove-testbench native LSP servers for the nav-3way experiment (lsp arm). Servers resolve their per-repo config (clangd: compile_commands.json at the repo root; pyright: source tree) from the workspace; binaries live in the frozen base + lsp image."
+}

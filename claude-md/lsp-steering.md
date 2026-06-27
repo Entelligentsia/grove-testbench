@@ -1,48 +1,53 @@
 <!-- lsp:start -->
-## INVARIANT — code navigation goes through the LSP server
+## INVARIANT — code navigation goes through the LSP tool
 
 Every where-is / who-calls / what-is-the-type action in this project goes through
-the **lsp** MCP server (a real language server — clangd/pyright/etc — resolving
-symbols through the compiler's own type model). This is not a preference. `grep`,
-`rg`, `read`, `cat`, and `sed` on a source file are FALLBACKS, allowed only after
-the lsp server has been tried and returned insufficient content. Running
-`grep -rn '<symbol>'`, or reading a whole source file, as your first action on a
-code question is a steering violation.
+Claude Code's built-in **`LSP`** tool (a real language server — clangd/pyright/etc —
+resolving symbols through the compiler's own type model). This is not a preference.
+`grep`, `rg`, `cat`, and `sed` on a source file are FALLBACKS, allowed only after
+the LSP tool has been tried and returned insufficient content. Running
+`grep -rn '<symbol>'` as your first action on a code question is a steering violation.
 
-The lsp tools are **deferred** MCP tools — the moment a code question arrives,
-load their schemas with ToolSearch (do not default to a search agent or grep):
-`mcp__lsp__definition`, `mcp__lsp__references`, `mcp__lsp__hover`. Use only this
-read-only subset; do NOT use `rename_symbol` or `edit_file`.
+The `LSP` tool is a **deferred** tool — the moment a code question arrives, load its
+schema with ToolSearch (`select:LSP`) and use it; do not default to a search agent
+or grep.
 
-**Trigger — check before every tool call.** If the prompt contains any of — a
-file path, a function / type / struct / macro name, or the words "where is",
-"what does X define", "who calls", "show me", "find", "list" — your FIRST tool
-call MUST be an lsp tool. Otherwise the lsp server is optional.
+**Operations** (pass `operation` plus its arguments):
+- `workspaceSymbol` (`query`) — find a symbol by name across the project. Start here
+  when you have a name but not a location.
+- `goToDefinition` (`filePath`, `line`, `character`) — jump from a position to the
+  canonical definition.
+- `references` (`filePath`, `line`, `character`) — every use site of the symbol at
+  that position, type-resolved.
+- `hover` (`filePath`, `line`, `character`) — the resolved type / signature / doc at
+  a position.
+- `documentSymbol` (`filePath`) — the symbol outline of one file.
+
+**Trigger — check before every tool call.** If the prompt contains any of — a file
+path, a function / type / struct / macro name, or the words "where is", "what does X
+define", "who calls", "show me", "find", "list" — your FIRST tool call MUST be an
+`LSP` operation. Otherwise the LSP tool is optional.
 
 **Procedure.**
-1. Symbol by name (function, type, struct, macro, constant) → `mcp__lsp__definition`
-   with `symbolName`. Returns the definition's file, line range, and source body —
-   resolved by the compiler, not by string match.
-2. "who calls" / "where is this used" → `mcp__lsp__references` with `symbolName`.
-   Returns every use site across the whole project.
-3. "what is the type of X here" / "what does this expression resolve to" →
-   `mcp__lsp__hover` with `filePath`, `line`, `column` (the exact position).
-4. The server is name-based for definition/references: ask for the symbol by name,
-   it resolves via the project index — no file:line needed for those two.
+1. Symbol by name → `LSP workspaceSymbol` with `query`. It returns the symbol's
+   file + position.
+2. "where is this defined" → `LSP goToDefinition` at a position where the symbol
+   appears. "who calls / where used" → `LSP references`. "what type is this" →
+   `LSP hover`.
+3. The position-based operations need a `filePath:line:character`. To anchor one,
+   you may `read` the relevant file (reading code to find the line you mean is the
+   normal editor workflow) or use `workspaceSymbol`/`documentSymbol` to get a
+   location — then call the LSP operation for the authoritative, type-resolved
+   answer. Do NOT `grep -rn` to build the picture instead — grep returns string
+   matches; the LSP tool returns the compiler-resolved definition/references,
+   disambiguating overloads, shadowing, and same-named symbols in different scopes.
 
-**Cross-file.** `mcp__lsp__definition` (jump to the canonical definition) →
-`mcp__lsp__references` (all use sites, type-resolved). Do NOT `grep -rn '<type>' .`
-instead — grep returns string matches; the lsp server returns the actual
-compiler-resolved definition and references, disambiguating overloads, shadowing,
-and same-named symbols in different scopes.
+**Recovery (empty / not-found).** A single LSP miss does NOT justify switching to
+grep for later questions. If `workspaceSymbol` comes back empty (the index may still
+be warming), `read` a file where the symbol occurs and call `goToDefinition` /
+`references` at that position instead, then continue using LSP.
 
-**Recovery (empty / not-found).** A single lsp miss does NOT justify switching to
-grep for later questions — retry the query (the symbol name exactly as declared),
-or use `mcp__lsp__hover` at a known occurrence to anchor resolution, then continue.
-Only after a genuine miss may you fall back to `read` with `offset`/`limit` (never
-the whole file).
-
-`read` on a 1700-line file floods context with ~50 KB you don't need; `grep`
-misses struct/function boundaries and conflates same-named symbols. The lsp server
-answers from the compiler's type model — precise, line-exact, and source-quoted.
+`read` on a 1700-line file floods context with content you don't need; `grep` misses
+struct/function boundaries and conflates same-named symbols. The LSP tool answers
+from the compiler's type model — precise, line-exact, and cross-file.
 <!-- lsp:end -->

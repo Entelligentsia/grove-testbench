@@ -8,7 +8,10 @@
 #                    (modelUsage in the result event — includes subagents)
 #   has_result     : completed cleanly (not a DNF)
 #   eacces         : count of the session-env Bash bug signal (must be 0)
-#   bash_calls/reads/grove_tools/mcp_nongrove_tools : engagement, per arm
+#   bash_calls/reads/grove_tools/lsp_tools : engagement, per arm
+#     baseline -> bash_calls>0 | grove -> grove_tools>0 | lsp -> lsp_tools>0
+#     (lsp arm uses Claude Code's NATIVE LSP tool, name=="LSP" in the transcript;
+#      mcp_nongrove_tools is retained for legacy/bridge transcripts.)
 #
 # Usage: experiment/side-metrics.sh <transcript.jsonl>
 set -uo pipefail
@@ -32,6 +35,7 @@ jq -s --argjson eacces "$eacces" '
       reads:          ([ $tu[] | select(.name=="Read") ] | length),
       bash_calls:     ([ $tu[] | select(.name=="Bash") ] | length),
       grove_tools:    ([ $tu[] | select(.name | startswith("mcp__grove__")) ] | length),
+      lsp_tools:      ([ $tu[] | select(.name == "LSP") ] | length),
       mcp_nongrove_tools: ([ $tu[] | select((.name | startswith("mcp__")) and (.name | startswith("mcp__grove__") | not)) ] | length),
       eacces:         $eacces
     }

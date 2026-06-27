@@ -31,7 +31,7 @@ OUT="$root/out/l4"
 BASE_IMG="grove-testbench/base:latest"
 GROVE_IMG="grove-testbench/grove:v0.1.8"
 LSP_IMG="grove-testbench/lsp:latest"
-MCP_CONFIG=""        # required for lsp: the per-repo MCP->LSP bridge config
+LSP_PLUGIN=""        # lsp arm: native-LSP plugin dir (default experiment/lsp-plugin)
 PROMPT_OVERRIDE=""
 while [[ $# -gt 0 ]]; do case "$1" in
   --model)      MODEL="$2"; shift 2 ;;
@@ -40,7 +40,7 @@ while [[ $# -gt 0 ]]; do case "$1" in
   --baseline)   BASE_IMG="$2"; shift 2 ;;
   --grove)      GROVE_IMG="$2"; shift 2 ;;
   --lsp)        LSP_IMG="$2"; shift 2 ;;
-  --mcp-config) MCP_CONFIG="$2"; shift 2 ;;
+  --lsp-plugin) LSP_PLUGIN="$2"; shift 2 ;;
   *) echo "unknown flag: $1" >&2; exit 2 ;; esac; done
 
 command -v jq  >/dev/null || { echo "jq required" >&2; exit 1; }
@@ -71,12 +71,18 @@ install -m 0644 "$CREDS" "$CFG/creds.json"   # copied into a fresh tmpfs .claude
 #      is ephemeral: every cell starts from an identical clean .claude, nothing
 #      persists to the host, no cross-arm contamination. (Creds copied in below.)
 
+# LSP arm uses Claude Code's NATIVE LSP tool (a deferred built-in, like grove's
+# MCP tools), configured by a plugin's .lsp.json and loaded with --plugin-dir.
+# It does NOT go through MCP, so the lsp arm's MCP config is empty (LSP ≠ MCP).
+# baseline/grove never get --plugin-dir, so their native LSP tool has no server
+# configured and is inert — a clean control.
 case "$SIDE" in
   baseline) IMG="$BASE_IMG";  CFGNAME=empty-mcp.json ;;
   grove)    IMG="$GROVE_IMG"; CFGNAME=grove-mcp.json ;;
-  lsp)      IMG="$LSP_IMG";   CFGNAME=lsp-mcp.json
-            [[ -n "$MCP_CONFIG" && -f "$MCP_CONFIG" ]] || { echo "lsp arm needs --mcp-config <bridge config file>" >&2; exit 2; }
-            cp "$MCP_CONFIG" "$CFG/lsp-mcp.json" ;;
+  lsp)      IMG="$LSP_IMG";   CFGNAME=empty-mcp.json
+            LSP_PLUGIN="${LSP_PLUGIN:-$root/experiment/lsp-plugin}"
+            [[ -d "$LSP_PLUGIN" && -f "$LSP_PLUGIN/.lsp.json" ]] || { echo "lsp arm needs --lsp-plugin <dir> with .lsp.json (default missing: $LSP_PLUGIN)" >&2; exit 2; }
+            LSP_PLUGIN="$(cd "$LSP_PLUGIN" && pwd)" ;;   # docker -v needs an absolute path
 esac
 CREPO="/home/bench/repos/$REPO"
 OUTFILE="$OUT/$SCENE.claude.$SIDE.jsonl"
@@ -128,14 +134,24 @@ echo "    repo dir: $CREPO   out: $OUTFILE"
 # read the bench-owned copies; /sa stays on the host after --rm destroys the tmpfs.
 HARVEST_SA="{ rm -rf /sa/* 2>/dev/null; find \$HOME/.claude/projects -path '*/subagents/*' -type f \\( -name '*.jsonl' -o -name '*.meta.json' \\) -exec cp {} /sa/ \\; ; chmod -R a+rX /sa; } >/dev/null 2>&1 || true"
 
+# lsp arm: mount the native-LSP plugin and load it for this run. Other arms get
+# neither, so their built-in LSP tool stays unconfigured/inert (clean control).
+PLUGIN_MOUNT=(); PLUGIN_ARG=""
+if [[ "$SIDE" == lsp ]]; then
+  PLUGIN_MOUNT=(-v "$LSP_PLUGIN:/plugin:ro")
+  PLUGIN_ARG="--plugin-dir /plugin"
+  echo "    lsp plugin: $LSP_PLUGIN"
+fi
+
 docker run --rm \
   -e LANG=C.UTF-8 -e LC_ALL=C.UTF-8 -e COLORTERM=truecolor \
   -e RACE_PROMPT="$(cat "$PROMPT_FILE")" \
   --tmpfs /home/bench/.claude:rw,mode=1777 \
   -v "$CFG:/cfg:ro" \
   -v "$SADIR:/sa" \
+  "${PLUGIN_MOUNT[@]}" \
   "$IMG" \
-  bash -lc "cp /cfg/creds.json /home/bench/.claude/.credentials.json; cd $CREPO && $INJECT; claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions ${MODEL_ARG[*]} --strict-mcp-config --mcp-config /cfg/$CFGNAME; $HARVEST_SA" \
+  bash -lc "cp /cfg/creds.json /home/bench/.claude/.credentials.json; cd $CREPO && $INJECT; claude -p \"\$RACE_PROMPT\" --output-format stream-json --verbose --dangerously-skip-permissions ${MODEL_ARG[*]} --strict-mcp-config --mcp-config /cfg/$CFGNAME $PLUGIN_ARG; $HARVEST_SA" \
   > "$OUTFILE"
 
 # report subagent transcripts captured (jsonl only; each has a sibling .meta.json)

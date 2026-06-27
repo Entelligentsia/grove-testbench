@@ -24,7 +24,10 @@ answer quality.
 
 - **baseline** = bash+coreutils (text). Image `grove-testbench/base:latest`, no MCP.
 - **grove** = + grove MCP/CLI (structural). Image `grove-testbench/grove:v0.1.8`.
-- **lsp** = + LSP via MCP→LSP bridge (semantic). Image `grove-testbench/lsp:latest`.
+- **lsp** = + Claude Code's NATIVE `LSP` tool (semantic), configured by
+  `experiment/lsp-plugin/.lsp.json`, loaded with `--plugin-dir`. Image
+  `grove-testbench/lsp:latest` (servers) or `:redis` (warm clangd cache).
+  (PIVOTED away from the isaacphi MCP→LSP bridge — see "Native LSP pivot" below.)
 
 Matrix = 5 rungs × 3 arms × 10 repos = **150 per-side cells**. Only **redis** is
 prepped + registered so far (15 cells, all `pending`).
@@ -46,8 +49,9 @@ prepped + registered so far (15 cells, all `pending`).
   baked by `grove init`; lsp's is `claude-md/lsp-steering.md`, injected by
   `run-side.sh` (base.md + block). baseline stays VANILLA (text only) by design.
   This was discovered the hard way: without lsp steering the agent ignored the
-  (deferred, ToolSearch-gated) `mcp__lsp__*` tools and just grepped → 0 engagement.
-  Both arms' MCP tools are deferred; steering is what makes the agent load+use them.
+  (deferred, ToolSearch-gated) navigation tools and just grepped → 0 engagement.
+  Both arms' nav tools are deferred (grove = `mcp__grove__*`, lsp = native `LSP`);
+  steering is what makes the agent load + use them.
 - Build tools (make/gcc/bear, later go/rust/jdk/ruby) live in **base** = uniform
   across all arms; only the build *execution* is LSP's per-repo setup cost.
 
@@ -74,23 +78,37 @@ prepped + registered so far (15 cells, all `pending`).
   it would double-count) — kept as clean human-readable evidence + a fallback if a
   future claude stops interleaving. (L1-redis spawned none.)
 - **Evidence:** harvested to `evidence/nav3/<rung>/{raw,readable}/` (none kept yet — L1-redis was a reset dry run).
-- **LSP:** `Dockerfile.lsp`, `experiment/lsp/lsp-seed.py` (seed-open proxy).
+- **LSP:** `experiment/lsp-plugin/` (`plugin.json` + `.lsp.json`), `experiment/lsp/pyright-probe.py` (direct-pyright readiness probe). `experiment/lsp/lsp-seed.py` is bridge-era/unused (Dockerfile.lsp still copies it — cleanup-later).
 
-## The LSP recipe — PRODUCTIONIZED for redis (template for the other 9)
-Three obstacles solved (see `LSP_SETUP.md`): (1) real build for a complete index,
-(2) `--compile-commands-dir`, (3) seed a `didOpen` so cold `workspace/symbol`
-resolves. **redis is done end-to-end:**
-- **Warmed image** `grove-testbench/lsp:redis` (digest in `state.json` setup) =
-  committed from the `warm-redis` container (real `bear` `compile_commands.json`
-  + 9.5M clangd `.cache`), then layered with `lsp-seed.py`. setup_s≈2749 (build+warm wall).
-- **Bridge config** `experiment/lsp/mcp-redis.json` (seed = `src/server.c`); pass to
-  `run-side.sh --lsp grove-testbench/lsp:redis --mcp-config experiment/lsp/mcp-redis.json`.
-- **Verification gate** `experiment/lsp/verify-bridge.py <symbol> <expect> -- <bridge…>`
-  drives the real MCP path (NDJSON transport!) and asserts line-exact resolution.
-  Proven: `definition(dictAdd)` → `src/dict.c:493`. `time-bridge.py` measures cold
-  readiness (≈1s to tools+first resolve on the warm image — NOT a timeout risk).
-- **CAVEAT (transport):** the bridge speaks MCP = newline-delimited JSON-RPC upstream,
-  LSP Content-Length framing downstream to the server. Test clients must use NDJSON.
+## Native LSP pivot (the lsp arm)
+Claude Code has a NATIVE first-class `LSP` tool (goToDefinition / references / hover /
+workspaceSymbol / documentSymbol), configured per language by a plugin `.lsp.json`,
+loaded headlessly with `--plugin-dir`, NOT routed through MCP. We pivoted to it from
+the isaacphi MCP→LSP bridge — it's simpler, more robust, and more ecologically valid
+(it's how agents actually get LSP in Claude Code; the bridge was an artificial path).
+- **Plugin:** `experiment/lsp-plugin/` — `.lsp.json` defines `clangd` (C/C++; repo-agnostic,
+  finds `compile_commands.json` from the workspace — covers redis + bitcoin) and
+  `pyright-langserver` (Python). Add gopls/rust-analyzer/ruby-lsp/jdtls entries as those
+  repos are wired (binaries are in the frozen base / lsp image; rust-analyzer needs
+  `rustup component add rust-analyzer`).
+- **Wiring:** `run-side.sh ... lsp --lsp <img> --lsp-plugin experiment/lsp-plugin`.
+  baseline/grove never get `--plugin-dir`, so their built-in LSP tool is unconfigured
+  & inert = clean control. lsp arm's MCP config is empty (LSP ≠ MCP).
+- **Engagement:** the tool appears in the transcript as `name=="LSP"` with an
+  `operation` field; `side-metrics.sh` counts it as `lsp_tools` (gate: `lsp_tools>0`).
+  It is a DEFERRED tool (ToolSearch-gated, like grove) → steering (`claude-md/lsp-steering.md`)
+  is what makes the agent load + use it.
+- **Ergonomics finding:** native LSP ops are POSITION-based (`goToDefinition` wants
+  file:line:char) and `workspaceSymbol` is empty on a cold clangd index (no auto-didOpen),
+  so the agent grep/reads to anchor a position, then LSP-resolves. Validated on redis:
+  resolved `dictAdd`→dict.c/.h via `goToDefinition`, gate `lsp_tools≥1` (with `bash_calls`
+  for the grep-anchoring — an honest cost of LSP-as-deployed).
+- **Per-repo warm:** still meaningful for clangd (bake `compile_commands.json` + `.cache/clangd`
+  into `lsp:<repo>` — redis done). pyright has NO persistent index (re-scans each run);
+  its per-repo concern is scoping the scan (workspace = package dir) + cold readiness.
+- **STALE:** the harvested `L1-lsp-redis` cell + its judge entry were produced via the
+  OLD bridge — re-run via native LSP before trusting them (deprioritized; redis re-run
+  is not the current goal).
 
 Per-repo runtime bridge invocation (what the MCP config encodes):
 ```

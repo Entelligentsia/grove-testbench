@@ -1,0 +1,15 @@
+{
+  "clangd": {
+    "command": "clangd",
+    "args": ["--background-index"],
+    "extensionToLanguage": {
+      ".c": "c", ".h": "c",
+      ".cc": "cpp", ".cpp": "cpp", ".cxx": "cpp", ".hpp": "cpp", ".hh": "cpp"
+    }
+  },
+  "pyright": {
+    "command": "pyright-langserver",
+    "args": ["--stdio"],
+    "extensionToLanguage": { ".py": "python" }
+  }
+}
